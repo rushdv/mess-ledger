@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// Next.js configuration with experimental serverActions allowedOrigins setting
 const nextConfig = {
   experimental: {
     serverActions: {
