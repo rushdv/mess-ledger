@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useMessContext } from "@/hooks/use-mess-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MonthPicker } from "@/components/layout/month-picker";
@@ -27,7 +28,10 @@ type MealMap = Record<string, Record<string, MealEntry>>;
 
 export default function MealsPage() {
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "ADMIN";
+  const { messContext } = useMessContext();
+  
+  // Use mess-specific role
+  const canManage = messContext?.canManage ?? false;
 
   const { month: initMonth, year: initYear } = getCurrentMonthYear();
   const [month, setMonth] = useState(initMonth);
@@ -169,7 +173,7 @@ export default function MealsPage() {
                         [member.id]: { ...prev[member.id], [meal]: parseInt(ev.target.value) || 0 },
                       }))
                     }
-                    disabled={!isAdmin}
+                    disabled={!canManage}
                   />
                 </div>
               ))}
@@ -308,10 +312,10 @@ export default function MealsPage() {
         </div>
 
         {/* Two-column layout */}
-        <div className={`grid gap-6 items-start ${isAdmin ? 'grid-cols-3' : 'grid-cols-1'}`}>
+        <div className={`grid gap-6 items-start ${canManage ? 'grid-cols-3' : 'grid-cols-1'}`}>
 
           {/* Left col (2/3 or full): monthly overview table */}
-          <div className={`${isAdmin ? 'col-span-2' : 'col-span-1'} rounded-xl border bg-card`}>
+          <div className={`${canManage ? 'col-span-2' : 'col-span-1'} rounded-xl border bg-card`}>
             <div className="border-b px-5 py-4 flex items-center justify-between">
               <div>
                 <h2 className="font-semibold">Monthly Overview</h2>
@@ -334,7 +338,7 @@ export default function MealsPage() {
           </div>
 
           {/* Right col (1/3): day entry panel */}
-          {isAdmin && (
+          {canManage && (
             <div className="rounded-xl border bg-card">
               <div className="border-b px-4 py-4">
                 <div className="flex items-center justify-between">
@@ -351,12 +355,12 @@ export default function MealsPage() {
               {MemberInputs}
 
               <div className="border-t p-4">
-                <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !isAdmin}>
+                <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !canManage}>
                   <Save className="mr-2 h-4 w-4" />
                   {saving ? "Saving..." : `Save Day ${selectedDay}`}
                 </Button>
-                {!isAdmin && (
-                  <p className="mt-2 text-center text-xs text-muted-foreground">Only admin can add meals</p>
+                {!canManage && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">Only admin/moderator can add meals</p>
                 )}
               </div>
             </div>
@@ -386,7 +390,7 @@ export default function MealsPage() {
         )}
 
         {/* Day entry card */}
-        {isAdmin && (
+        {canManage && (
           <div className="rounded-2xl border bg-card">
             <div className="border-b px-4 py-3">
               <div className="flex items-center justify-between">
@@ -397,12 +401,12 @@ export default function MealsPage() {
             </div>
             {MemberInputs}
             <div className="border-t p-4">
-              <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !isAdmin}>
+              <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !canManage}>
                 <Save className="mr-2 h-4 w-4" />
                 {saving ? "Saving..." : `Save Day ${selectedDay}`}
               </Button>
-              {!isAdmin && (
-                <p className="mt-2 text-center text-xs text-muted-foreground">Only admin can add meals</p>
+              {!canManage && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">Only admin/moderator can add meals</p>
               )}
             </div>
           </div>
