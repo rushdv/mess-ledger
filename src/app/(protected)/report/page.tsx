@@ -74,14 +74,22 @@ export default function ReportPage() {
   return (
     <div className="space-y-5">
       {/* Controls */}
-      <div className="flex items-center justify-between gap-3">
-        <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
-        {isAdmin && (
-          <Button variant="outline" size="sm" className="rounded-xl" onClick={handleRecalculate} disabled={recalculating}>
-            <RefreshCw className={`mr-1 h-3.5 w-3.5 ${recalculating ? "animate-spin" : ""}`} />
-            Recalc
-          </Button>
-        )}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              onClick={handleRecalculate}
+              disabled={recalculating}
+            >
+              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${recalculating ? "animate-spin" : ""}`} />
+              Recalculate
+            </Button>
+          )}
+        </div>
       </div>
 
       {loading ? (

@@ -26,7 +26,7 @@ export function MonthPicker({ month, year, onChange }: MonthPickerProps) {
       <Button variant="outline" size="icon" onClick={prev} aria-label="Previous month">
         <ChevronLeft className="h-4 w-4" />
       </Button>
-      <span className="min-w-[140px] text-center font-medium">
+      <span className="flex-1 text-center font-medium sm:min-w-[140px] sm:flex-none">
         {getMonthName(month)} {year}
       </span>
       <Button variant="outline" size="icon" onClick={next} aria-label="Next month">

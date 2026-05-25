@@ -62,14 +62,14 @@ export default function BazarPage() {
 
   return (
     <div className="space-y-5">
-      {/* Month picker */}
-      <div className="flex items-center justify-between">
+      {/* Month picker + Add — two separate rows on mobile */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="rounded-xl">
-              <Plus className="mr-1 h-4 w-4" />
-              Add
+            <Button className="w-full rounded-xl sm:w-auto">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Entry
             </Button>
           </DialogTrigger>
           <DialogContent className="mx-4 rounded-2xl sm:mx-auto">
