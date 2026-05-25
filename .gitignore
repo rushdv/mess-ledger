@@ -47,3 +47,4 @@ prisma/*.backup-*
 *_INSTRUCTIONS.md
 *_UPDATES.md
 fix-*.sh
+make_commits.py
