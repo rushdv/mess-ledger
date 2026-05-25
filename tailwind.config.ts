@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 
+// Tailwind CSS configuration using design system variables (shadcn/ui)
 const config: Config = {
   darkMode: ["class"],
   content: [
