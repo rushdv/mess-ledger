@@ -1,5 +1,7 @@
 "use client";
 
+// Global providers for Next.js App (Theme & Session management)
+
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 
