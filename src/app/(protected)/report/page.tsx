@@ -2,29 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, getMonthName } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableFooter,
-} from "@/components/ui/table";
 import { RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 
 interface MemberSummary {
@@ -64,14 +47,11 @@ export default function ReportPage() {
   const fetchReport = useCallback(async () => {
     setLoading(true);
     const res = await fetch(`/api/report?month=${month}&year=${year}`);
-    const data = await res.json();
-    setReport(data);
+    setReport(await res.json());
     setLoading(false);
   }, [month, year]);
 
-  useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
+  useEffect(() => { fetchReport(); }, [fetchReport]);
 
   async function handleRecalculate() {
     setRecalculating(true);
@@ -86,152 +66,126 @@ export default function ReportPage() {
 
   const chartData = report?.memberSummaries.map((s) => ({
     name: s.memberName.split(" ")[0],
-    "Meal Cost": Math.round(s.mealCost),
-    "Utility Share": Math.round(s.utilityShare),
-    Paid: Math.round(s.totalPaid),
+    "Meal": Math.round(s.mealCost),
+    "Utility": Math.round(s.utilityShare),
+    "Paid": Math.round(s.totalPaid),
   }));
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Monthly Report</h1>
-          <p className="text-muted-foreground">Full breakdown of costs and dues</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <MonthPicker
-            month={month}
-            year={year}
-            onChange={(m, y) => { setMonth(m); setYear(y); }}
-          />
-          {isAdmin && (
-            <Button variant="outline" onClick={handleRecalculate} disabled={recalculating}>
-              <RefreshCw className={`mr-1 h-4 w-4 ${recalculating ? "animate-spin" : ""}`} />
-              Recalculate
-            </Button>
-          )}
-        </div>
+    <div className="space-y-5">
+      {/* Controls */}
+      <div className="flex items-center justify-between gap-3">
+        <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
+        {isAdmin && (
+          <Button variant="outline" size="sm" className="rounded-xl" onClick={handleRecalculate} disabled={recalculating}>
+            <RefreshCw className={`mr-1 h-3.5 w-3.5 ${recalculating ? "animate-spin" : ""}`} />
+            Recalc
+          </Button>
+        )}
       </div>
 
       {loading ? (
         <div className="flex h-40 items-center justify-center">
-          <p className="text-muted-foreground">Loading report...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : report ? (
         <>
-          {/* Summary cards */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { label: "Total Meals", value: report.totalMeals.toString() },
-              { label: "Meal Rate", value: `${formatCurrency(report.mealRate)}/meal` },
-              { label: "Bazar Cost", value: formatCurrency(report.totalBazarCost) },
-              { label: "Utility Cost", value: formatCurrency(report.totalUtility) },
-            ].map((s) => (
-              <Card key={s.label}>
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">{s.label}</p>
-                  <p className="text-2xl font-bold">{s.value}</p>
-                </CardContent>
-              </Card>
-            ))}
+          {/* Hero */}
+          <div className="rounded-2xl bg-gradient-to-br from-primary to-blue-600 p-5 text-primary-foreground">
+            <p className="text-sm opacity-80">{getMonthName(month)} {year} — Total Cost</p>
+            <p className="mt-1 text-3xl font-bold">{formatCurrency(report.totalCost)}</p>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-white/15 p-3">
+                <p className="text-xs opacity-80">Meal Rate</p>
+                <p className="text-lg font-semibold">{formatCurrency(report.mealRate)}</p>
+                <p className="text-xs opacity-70">per meal</p>
+              </div>
+              <div className="rounded-xl bg-white/15 p-3">
+                <p className="text-xs opacity-80">Total Meals</p>
+                <p className="text-lg font-semibold">{report.totalMeals}</p>
+                <p className="text-xs opacity-70">{report.memberSummaries.length} members</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Cost breakdown */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Bazar Cost</p>
+              <p className="mt-1 text-xl font-bold">{formatCurrency(report.totalBazarCost)}</p>
+            </div>
+            <div className="rounded-2xl border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Utility Cost</p>
+              <p className="mt-1 text-xl font-bold">{formatCurrency(report.totalUtility)}</p>
+            </div>
           </div>
 
           {/* Chart */}
           {chartData && chartData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  Cost Breakdown — {getMonthName(month)} {year}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                    <Legend />
-                    <Bar dataKey="Meal Cost" fill="#3b82f6" />
-                    <Bar dataKey="Utility Share" fill="#f59e0b" />
-                    <Bar dataKey="Paid" fill="#22c55e" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <div className="rounded-2xl border bg-card p-4">
+              <p className="mb-3 font-semibold">Cost Breakdown</p>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="Meal" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Utility" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Paid" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           )}
 
-          {/* Member table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Member Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Member</TableHead>
-                    <TableHead className="text-right">Meals</TableHead>
-                    <TableHead className="text-right">Meal Cost</TableHead>
-                    <TableHead className="text-right">Utility</TableHead>
-                    <TableHead className="text-right">Total Cost</TableHead>
-                    <TableHead className="text-right">Paid</TableHead>
-                    <TableHead className="text-right">Due / Advance</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {report.memberSummaries.map((s) => (
-                    <TableRow key={s.memberId}>
-                      <TableCell className="font-medium">{s.memberName}</TableCell>
-                      <TableCell className="text-right">{s.totalMeals}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(s.mealCost)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(s.utilityShare)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(s.totalCost)}</TableCell>
-                      <TableCell className="text-right text-green-600">
-                        {formatCurrency(s.totalPaid)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span
-                          className={`flex items-center justify-end gap-1 font-semibold ${
-                            s.due > 0 ? "text-destructive" : "text-green-600"
-                          }`}
-                        >
-                          {s.due > 0 ? (
-                            <TrendingUp className="h-3 w-3" />
-                          ) : (
-                            <TrendingDown className="h-3 w-3" />
-                          )}
-                          {formatCurrency(Math.abs(s.due))}
-                          {s.due < 0 && " ↑"}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell className="font-bold">Total</TableCell>
-                    <TableCell className="text-right font-bold">{report.totalMeals}</TableCell>
-                    <TableCell className="text-right font-bold">
-                      {formatCurrency(report.totalBazarCost)}
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      {formatCurrency(report.totalUtility)}
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      {formatCurrency(report.totalCost)}
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-green-600">
-                      {formatCurrency(
-                        report.memberSummaries.reduce((s, m) => s + m.totalPaid, 0)
-                      )}
-                    </TableCell>
-                    <TableCell />
-                  </TableRow>
-                </TableFooter>
-              </Table>
-            </CardContent>
-          </Card>
+          {/* Member cards */}
+          <div className="rounded-2xl border bg-card">
+            <div className="border-b px-4 py-3">
+              <p className="font-semibold">Member Summary</p>
+            </div>
+            <div className="divide-y">
+              {report.memberSummaries.map((s) => (
+                <div key={s.memberId} className="px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                        {s.memberName[0]?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium">{s.memberName}</p>
+                        <p className="text-xs text-muted-foreground">{s.totalMeals} meals</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`flex items-center gap-1 font-bold ${s.due > 0 ? "text-red-600" : "text-green-600"}`}>
+                        {s.due > 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                        {formatCurrency(Math.abs(s.due))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {s.due > 0 ? "owes" : "advance"}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Detail row */}
+                  <div className="mt-2 grid grid-cols-3 gap-2 rounded-xl bg-muted/40 p-2">
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">Meal</p>
+                      <p className="text-sm font-semibold">{formatCurrency(s.mealCost)}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">Utility</p>
+                      <p className="text-sm font-semibold">{formatCurrency(s.utilityShare)}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">Paid</p>
+                      <p className="text-sm font-semibold text-green-600">{formatCurrency(s.totalPaid)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </>
       ) : null}
     </div>

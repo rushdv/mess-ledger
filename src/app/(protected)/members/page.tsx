@@ -1,18 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Plus, UserX, UserCheck } from "lucide-react";
+import { Plus, UserX, UserCheck, Phone, Mail, Shield } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 
@@ -21,12 +15,7 @@ interface Member {
   phone: string | null;
   isActive: boolean;
   joinedAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-    role: string;
-  };
+  user: { id: string; name: string | null; email: string; role: string };
 }
 
 export default function MembersPage() {
@@ -41,9 +30,7 @@ export default function MembersPage() {
     setMembers(await res.json());
   }, []);
 
-  useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
+  useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -78,70 +65,46 @@ export default function MembersPage() {
   const inactive = members.filter((m) => !m.isActive);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Members</h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {active.length} active · {inactive.length} inactive
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button size="sm" className="rounded-xl">
               <Plus className="mr-1 h-4 w-4" />
               Add Member
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Member</DialogTitle>
-            </DialogHeader>
+          <DialogContent className="mx-4 rounded-2xl sm:mx-auto">
+            <DialogHeader><DialogTitle>Add New Member</DialogTitle></DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="m-name">Full Name</Label>
-                <Input
-                  id="m-name"
-                  placeholder="Rahim Uddin"
-                  value={form.name}
-                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                  required
-                />
+                <Input id="m-name" placeholder="Rahim Uddin"
+                  value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="m-email">Email</Label>
-                <Input
-                  id="m-email"
-                  type="email"
-                  placeholder="rahim@example.com"
-                  value={form.email}
-                  onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                  required
-                />
+                <Input id="m-email" type="email" placeholder="rahim@example.com"
+                  value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="m-phone">Phone (optional)</Label>
-                <Input
-                  id="m-phone"
-                  placeholder="01700000000"
-                  value={form.phone}
-                  onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                />
+                <Input id="m-phone" placeholder="01700000000"
+                  value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="m-pass">Password</Label>
-                <Input
-                  id="m-pass"
-                  type="password"
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-                  required
-                  minLength={6}
-                />
+                <Input id="m-pass" type="password" placeholder="••••••••"
+                  value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} required minLength={6} />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full rounded-xl" disabled={loading}>
                 {loading ? "Adding..." : "Add Member"}
               </Button>
             </form>
@@ -150,82 +113,81 @@ export default function MembersPage() {
       </div>
 
       {/* Active members */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Active Members</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {active.length === 0 ? (
-            <p className="py-4 text-center text-muted-foreground">No active members.</p>
-          ) : (
-            <div className="space-y-2">
-              {active.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between rounded-md border p-3"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{member.user.name ?? member.user.email}</p>
-                      {member.user.role === "ADMIN" && (
-                        <Badge variant="default" className="text-xs">Admin</Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{member.user.email}</p>
-                    {member.phone && (
-                      <p className="text-xs text-muted-foreground">{member.phone}</p>
+      <div className="rounded-2xl border bg-card">
+        <div className="border-b px-4 py-3">
+          <p className="font-semibold">Active Members</p>
+        </div>
+        {active.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">No active members</p>
+        ) : (
+          <div className="divide-y">
+            {active.map((member) => (
+              <div key={member.id} className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
+                    {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
+                    {member.user.role === "ADMIN" && (
+                      <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
+                        <Shield className="h-2.5 w-2.5 text-primary-foreground" />
+                      </span>
                     )}
-                    <p className="text-xs text-muted-foreground">
-                      Joined {formatDate(member.joinedAt)}
-                    </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => toggleActive(member)}
-                  >
-                    <UserX className="mr-1 h-4 w-4" />
-                    Deactivate
-                  </Button>
+                  <div>
+                    <p className="font-medium">{member.user.name ?? member.user.email}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Mail className="h-3 w-3" />
+                      <span className="truncate max-w-[140px]">{member.user.email}</span>
+                    </div>
+                    {member.phone && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Phone className="h-3 w-3" />
+                        <span>{member.phone}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <button
+                  onClick={() => toggleActive(member)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500 active:bg-red-100"
+                  aria-label="Deactivate"
+                >
+                  <UserX className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Inactive members */}
       {inactive.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base text-muted-foreground">Inactive Members</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {inactive.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between rounded-md border p-3 opacity-60"
-                >
-                  <div>
-                    <p className="font-medium">{member.user.name ?? member.user.email}</p>
-                    <p className="text-sm text-muted-foreground">{member.user.email}</p>
+        <div className="rounded-2xl border bg-card opacity-70">
+          <div className="border-b px-4 py-3">
+            <p className="font-semibold text-muted-foreground">Inactive Members</p>
+          </div>
+          <div className="divide-y">
+            {inactive.map((member) => (
+              <div key={member.id} className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted text-base font-bold text-muted-foreground">
+                    {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-green-600 hover:text-green-700"
-                    onClick={() => toggleActive(member)}
-                  >
-                    <UserCheck className="mr-1 h-4 w-4" />
-                    Reactivate
-                  </Button>
+                  <div>
+                    <p className="font-medium text-muted-foreground">{member.user.name ?? member.user.email}</p>
+                    <p className="text-xs text-muted-foreground">{member.user.email}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <button
+                  onClick={() => toggleActive(member)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-green-600 transition-colors hover:bg-green-50 active:bg-green-100"
+                  aria-label="Reactivate"
+                >
+                  <UserCheck className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
