@@ -15,6 +15,7 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+// Formats a Date object or string as DD MMM YYYY (e.g. 26 May 2026)
 export function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString("en-BD", {
     day: "2-digit",
