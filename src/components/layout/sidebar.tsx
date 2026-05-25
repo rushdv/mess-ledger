@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -13,7 +13,6 @@ import {
   Users,
   LogOut,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -32,14 +31,18 @@ export function Sidebar() {
   const isAdmin = session?.user?.role === "ADMIN";
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-card">
+    // Hidden on mobile, visible on md+
+    <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-card">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b px-6">
-        <span className="text-xl font-bold text-primary">MessLedger</span>
+      <div className="flex h-16 items-center gap-3 border-b px-6">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <UtensilsCrossed className="h-4 w-4 text-primary-foreground" />
+        </div>
+        <span className="text-lg font-bold">MessLedger</span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => {
           if (item.adminOnly && !isAdmin) return null;
           const Icon = item.icon;
@@ -49,13 +52,13 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4 shrink-0" />
               {item.label}
             </Link>
           );
@@ -63,17 +66,19 @@ export function Sidebar() {
       </nav>
 
       {/* User + Logout */}
-      <div className="border-t p-4">
-        <div className="mb-2 px-3">
-          <p className="text-sm font-medium">{session?.user?.name}</p>
-          <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
-          <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-            {session?.user?.role}
-          </span>
+      <div className="border-t p-3">
+        <div className="mb-2 flex items-center gap-3 rounded-lg px-3 py-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+            {session?.user?.name?.[0]?.toUpperCase() ?? "?"}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{session?.user?.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{session?.user?.email}</p>
+          </div>
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
         >
           <LogOut className="h-4 w-4" />
           Sign out
