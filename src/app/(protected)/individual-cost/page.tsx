@@ -35,7 +35,12 @@ export default function IndividualCostPage() {
   const [entries, setEntries] = useState<IndividualCostEntry[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ memberId: "", amount: "", description: "" });
+  const [form, setForm] = useState({ 
+    memberId: "", 
+    amount: "", 
+    description: "",
+    date: new Date().toISOString().split('T')[0]
+  });
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -72,10 +77,16 @@ export default function IndividualCostPage() {
         year,
         amount: parseFloat(form.amount),
         description: form.description || null,
+        date: form.date,
       }),
     });
     if (res.ok) {
-      setForm({ memberId: "", amount: "", description: "" });
+      setForm({ 
+        memberId: "", 
+        amount: "", 
+        description: "",
+        date: new Date().toISOString().split('T')[0]
+      });
       setOpen(false);
       fetchData();
     }
@@ -101,6 +112,17 @@ export default function IndividualCostPage() {
           <DialogTitle>Add Individual Cost</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="ic-date">Date</Label>
+            <Input 
+              id="ic-date" 
+              type="date" 
+              value={form.date} 
+              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
+              required 
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
           <div className="space-y-2">
             <Label>Member</Label>
             <Select
