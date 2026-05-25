@@ -11,6 +11,8 @@ import {
   CreditCard,
   BarChart3,
   Users,
+  Receipt,
+  Share2,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +22,8 @@ const navItems = [
   { href: "/meals", label: "Meal Count", icon: UtensilsCrossed },
   { href: "/bazar", label: "Bazar Cost", icon: ShoppingBasket, adminOnly: true },
   { href: "/utility", label: "Utility", icon: Zap, adminOnly: true },
+  { href: "/individual-cost", label: "Individual Cost", icon: Receipt, adminOnly: true },
+  { href: "/shared-cost", label: "Shared Cost", icon: Share2, adminOnly: true },
   { href: "/payments", label: "Payments", icon: CreditCard, adminOnly: true },
   { href: "/report", label: "Report", icon: BarChart3 },
   { href: "/members", label: "Members", icon: Users, adminOnly: true },

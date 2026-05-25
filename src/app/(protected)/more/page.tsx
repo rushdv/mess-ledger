@@ -2,17 +2,30 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Zap, CreditCard, Users, LogOut, ChevronRight } from "lucide-react";
+import { Zap, CreditCard, Users, LogOut, ChevronRight, Receipt, Share2, Sun, Moon, Monitor } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 const adminItems = [
-  { href: "/utility", label: "Utility Costs", icon: Zap, description: "Electricity, gas, water, internet", color: "bg-yellow-50 text-yellow-600" },
-  { href: "/payments", label: "Payments", icon: CreditCard, description: "Record member deposits", color: "bg-green-50 text-green-600" },
-  { href: "/members", label: "Members", icon: Users, description: "Manage mess members", color: "bg-purple-50 text-purple-600" },
+  { href: "/utility", label: "Utility Costs", icon: Zap, description: "Electricity, gas, water, internet", color: "bg-yellow-50 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" },
+  { href: "/individual-cost", label: "Individual Cost", icon: Receipt, description: "Personal charges per member", color: "bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400" },
+  { href: "/shared-cost", label: "Shared Cost", icon: Share2, description: "Split cost among selected members", color: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400" },
+  { href: "/payments", label: "Payments", icon: CreditCard, description: "Record member deposits", color: "bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400" },
+  { href: "/members", label: "Members", icon: Users, description: "Manage mess members", color: "bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400" },
 ];
+
+const themeOptions = [
+  { value: "light", icon: Sun, label: "Light" },
+  { value: "dark", icon: Moon, label: "Dark" },
+  { value: "system", icon: Monitor, label: "System" },
+] as const;
 
 export default function MorePage() {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "ADMIN";
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <div className="space-y-6">
@@ -29,6 +42,34 @@ export default function MorePage() {
               {session?.user?.role}
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Theme selector */}
+      <div>
+        <p className="mb-3 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Appearance
+        </p>
+        <div className="overflow-hidden rounded-2xl border bg-card p-4">
+          <p className="mb-3 text-sm font-medium">Theme</p>
+          {mounted && (
+            <div className="grid grid-cols-3 gap-2">
+              {themeOptions.map(({ value, icon: Icon, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-colors ${
+                    theme === value
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-transparent bg-muted/50 text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-xs font-medium">{label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

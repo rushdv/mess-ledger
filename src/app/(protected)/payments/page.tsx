@@ -90,7 +90,7 @@ export default function PaymentsPage() {
       {payments.map((payment) => (
         <div key={payment.id} className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 text-sm font-bold text-green-600">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 dark:bg-green-950 text-sm font-bold text-green-600 dark:text-green-400">
               {(payment.member.user.name ?? payment.member.user.email)[0]?.toUpperCase()}
             </div>
             <div>
@@ -100,9 +100,9 @@ export default function PaymentsPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-green-600">+{formatCurrency(payment.amount)}</span>
+            <span className="font-semibold text-green-600 dark:text-green-400">+{formatCurrency(payment.amount)}</span>
             <button onClick={() => handleDelete(payment.id)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500"
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
               aria-label="Delete">
               <Trash2 className="h-4 w-4" />
             </button>
@@ -162,7 +162,7 @@ export default function PaymentsPage() {
                 {memberTotals.map((m) => (
                   <div key={m.name} className="flex items-center justify-between">
                     <span className="text-sm">{m.name}</span>
-                    <span className="font-semibold text-sm text-green-600">{formatCurrency(m.total)}</span>
+                    <span className="font-semibold text-sm text-green-600 dark:text-green-400">{formatCurrency(m.total)}</span>
                   </div>
                 ))}
               </div>

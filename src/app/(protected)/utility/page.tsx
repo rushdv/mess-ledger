@@ -18,11 +18,11 @@ const UTILITY_TYPES = ["ELECTRICITY", "GAS", "WATER", "INTERNET", "OTHER"] as co
 type UtilityType = (typeof UTILITY_TYPES)[number];
 
 const typeConfig: Record<UtilityType, { label: string; icon: React.ElementType; color: string; bg: string }> = {
-  ELECTRICITY: { label: "Electricity", icon: Zap,           color: "text-yellow-600", bg: "bg-yellow-50" },
-  GAS:         { label: "Gas",         icon: Flame,         color: "text-orange-600", bg: "bg-orange-50" },
-  WATER:       { label: "Water",       icon: Droplets,      color: "text-blue-600",   bg: "bg-blue-50"   },
-  INTERNET:    { label: "Internet",    icon: Wifi,          color: "text-purple-600", bg: "bg-purple-50" },
-  OTHER:       { label: "Other",       icon: MoreHorizontal,color: "text-gray-600",   bg: "bg-gray-100"  },
+  ELECTRICITY: { label: "Electricity", icon: Zap,           color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-950" },
+  GAS:         { label: "Gas",         icon: Flame,         color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950" },
+  WATER:       { label: "Water",       icon: Droplets,      color: "text-blue-600 dark:text-blue-400",     bg: "bg-blue-50 dark:bg-blue-950"     },
+  INTERNET:    { label: "Internet",    icon: Wifi,          color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950" },
+  OTHER:       { label: "Other",       icon: MoreHorizontal,color: "text-gray-600 dark:text-gray-400",     bg: "bg-gray-100 dark:bg-gray-800"    },
 };
 
 interface UtilityEntry {
@@ -122,7 +122,7 @@ export default function UtilityPage() {
               </div>
             </div>
             <button onClick={() => handleDelete(entry.id)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500"
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
               aria-label="Delete">
               <Trash2 className="h-4 w-4" />
             </button>

@@ -90,8 +90,8 @@ export default function BazarPage() {
       {entries.map((entry) => (
         <div key={entry.id} className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50">
-              <ShoppingBasket className="h-4 w-4 text-orange-600" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950">
+              <ShoppingBasket className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
               <p className="font-semibold">{formatCurrency(entry.amount)}</p>
@@ -101,7 +101,7 @@ export default function BazarPage() {
           </div>
           <button
             onClick={() => handleDelete(entry.id)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500 active:bg-red-100"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400 active:bg-red-100 dark:active:bg-red-900"
             aria-label="Delete"
           >
             <Trash2 className="h-4 w-4" />

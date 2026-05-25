@@ -72,9 +72,11 @@ model Member {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mealCounts MealCount[]
-  payments   Payment[]
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealCounts      MealCount[]
+  payments        Payment[]
+  individualCosts IndividualCost[]
+  sharedCosts     SharedCostMember[]
 }
 
 // One record per member per day
@@ -120,6 +122,47 @@ model UtilityCost {
   updatedAt   DateTime @updatedAt
 }
 
+// Shared costs split among selected members only
+model SharedCost {
+  id          String   @id @default(cuid())
+  month       Int
+  year        Int
+  amount      Float
+  description String?
+  addedBy     String   // userId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members SharedCostMember[]
+}
+
+// Junction table: which members share this cost
+model SharedCostMember {
+  id           String @id @default(cuid())
+  sharedCostId String
+  memberId     String
+
+  sharedCost SharedCost @relation(fields: [sharedCostId], references: [id], onDelete: Cascade)
+  member     Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([sharedCostId, memberId])
+}
+
+// Individual costs per member (personal expenses charged to a specific member)
+model IndividualCost {
+  id          String   @id @default(cuid())
+  memberId    String
+  month       Int
+  year        Int
+  amount      Float
+  description String?
+  addedBy     String   // userId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
 // Member payments (deposits)
 model Payment {
   id        String   @id @default(cuid())
@@ -161,7 +204,8 @@ model MemberMonthlySummary {
   totalMeals     Int
   mealCost       Float  // meals × mealRate
   utilityShare   Float
-  totalCost      Float  // mealCost + utilityShare
+  individualCost Float  @default(0) // personal/individual charges
+  totalCost      Float  // mealCost + utilityShare + individualCost
   totalPaid      Float
   due            Float  // totalCost - totalPaid (positive = owes, negative = advance)
 

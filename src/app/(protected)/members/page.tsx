@@ -110,8 +110,8 @@ export default function MembersPage() {
         onClick={() => toggleActive(member)}
         className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
           member.isActive
-            ? "text-muted-foreground hover:bg-red-50 hover:text-red-500"
-            : "text-green-600 hover:bg-green-50"
+            ? "text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
+            : "text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
         }`}
         aria-label={member.isActive ? "Deactivate" : "Reactivate"}
       >

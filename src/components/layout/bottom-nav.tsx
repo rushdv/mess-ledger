@@ -35,7 +35,7 @@ export function BottomNav() {
           const Icon = item.icon;
           const isActive =
             item.href === "/more"
-              ? ["/utility", "/payments", "/members"].includes(pathname)
+              ? ["/utility", "/payments", "/members", "/individual-cost", "/shared-cost"].includes(pathname)
               : pathname === item.href;
 
           return (

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear } from "@/lib/utils";
-import { Save, UtensilsCrossed } from "lucide-react";
+import { Save } from "lucide-react";
 
 interface Member {
   id: string;
@@ -36,7 +36,6 @@ export default function MealsPage() {
   const [mealMap, setMealMap] = useState<MealMap>({});
   const [message, setMessage] = useState("");
 
-  // Detailed entry state
   const today = new Date().getDate();
   const [selectedDay, setSelectedDay] = useState(today);
   const [entries, setEntries] = useState<Record<string, { breakfast: number; lunch: number; dinner: number }>>({});
@@ -63,17 +62,21 @@ export default function MealsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Sync entries when day/month/year/members/mealMap changes
+  const visibleMembers = isAdmin
+    ? members
+    : members.filter((m) => m.user.email === session?.user?.email);
+
+  // Sync entries on day/data change
   useEffect(() => {
     const dk = `${year}-${String(month).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
     const init: Record<string, { breakfast: number; lunch: number; dinner: number }> = {};
-    const visible = isAdmin ? members : members.filter((m) => m.user.email === session?.user?.email);
-    for (const m of visible) {
+    for (const m of visibleMembers) {
       const meal = mealMap[m.id]?.[dk];
       init[m.id] = { breakfast: meal?.breakfast ?? 0, lunch: meal?.lunch ?? 0, dinner: meal?.dinner ?? 0 };
     }
     setEntries(init);
-  }, [selectedDay, month, year, members, mealMap, isAdmin, session]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDay, month, year, mealMap]);
 
   async function handleSaveAll() {
     setSaving(true);
@@ -84,12 +87,14 @@ export default function MealsPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ memberId, date: dk, ...e }),
-        }).then((r) => r.json()).then((saved: MealEntry) => {
-          setMealMap((prev) => ({
-            ...prev,
-            [memberId]: { ...prev[memberId], [dk]: saved },
-          }));
         })
+          .then((r) => r.json())
+          .then((saved: MealEntry) => {
+            setMealMap((prev) => ({
+              ...prev,
+              [memberId]: { ...prev[memberId], [dk]: saved },
+            }));
+          })
       )
     );
     setSaving(false);
@@ -97,293 +102,314 @@ export default function MealsPage() {
     setTimeout(() => setMessage(""), 2000);
   }
 
-  const visibleMembers = isAdmin
-    ? members
-    : members.filter((m) => m.user.email === session?.user?.email);
+  const memberTotals = visibleMembers.map((m) => ({
+    member: m,
+    total: Object.values(mealMap[m.id] ?? {}).reduce((s, mc) => s + mc.total, 0),
+  }));
 
-  // Monthly totals per member
-  const memberTotals = visibleMembers.map((m) => {
-    const total = Object.values(mealMap[m.id] ?? {}).reduce((s, mc) => s + mc.total, 0);
-    return { member: m, total };
-  });
+  // ── Shared: Day selector strip ──────────────────────────────────────────────
+  const DayStrip = (
+    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+      {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
+        const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const hasMeals = visibleMembers.some((m) => (mealMap[m.id]?.[dk]?.total ?? 0) > 0);
+        const isToday = d === new Date().getDate() && month === new Date().getMonth() + 1 && year === new Date().getFullYear();
+        return (
+          <button
+            key={d}
+            onClick={() => setSelectedDay(d)}
+            className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-medium transition-colors ${
+              selectedDay === d
+                ? "bg-primary text-primary-foreground"
+                : isToday
+                ? "ring-2 ring-primary/40 hover:bg-muted"
+                : "hover:bg-muted"
+            }`}
+          >
+            {d}
+            {hasMeals && selectedDay !== d && (
+              <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
 
-  return (
-    <div className="space-y-5">
-      {/* Month picker */}
-      <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
-
-      {/* Monthly summary chips */}
-      {memberTotals.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {memberTotals.map(({ member, total }) => (
-            <div key={member.id} className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
+  // ── Shared: Member B/L/D inputs ─────────────────────────────────────────────
+  const MemberInputs = (
+    <div className="divide-y">
+      {visibleMembers.map((member) => {
+        const e = entries[member.id] ?? { breakfast: 0, lunch: 0, dinner: 0 };
+        const dayTotal = e.breakfast + e.lunch + e.dinner;
+        return (
+          <div key={member.id} className="px-4 py-3">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                  {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
+                </div>
+                <span className="text-sm font-medium">{member.user.name?.split(" ")[0] ?? member.user.email}</span>
               </div>
-              <span className="text-sm font-medium">{member.user.name?.split(" ")[0] ?? member.user.email}</span>
-              <span className="text-sm font-bold text-primary">{total}</span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${dayTotal > 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                {dayTotal}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Day entry card */}
-      <div className="rounded-2xl border bg-card">
-        <div className="border-b px-4 py-3">
-          <div className="flex items-center justify-between">
-            <p className="font-semibold">Daily Entry</p>
-            {message && <span className="text-sm font-medium text-green-600">{message}</span>}
+            <div className="grid grid-cols-3 gap-2">
+              {(["breakfast", "lunch", "dinner"] as const).map((meal) => (
+                <div key={meal} className="space-y-1">
+                  <label className="block text-center text-xs text-muted-foreground">
+                    {meal === "breakfast" ? "🌅 B" : meal === "lunch" ? "☀️ L" : "🌙 D"}
+                  </label>
+                  <Input
+                    type="number" min={0} max={1}
+                    className="h-9 text-center text-sm font-semibold"
+                    value={e[meal]}
+                    onChange={(ev) =>
+                      setEntries((prev) => ({
+                        ...prev,
+                        [member.id]: { ...prev[member.id], [meal]: parseInt(ev.target.value) || 0 },
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-          {/* Day selector */}
-          <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
-              const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-              const hasMeals = visibleMembers.some((m) => (mealMap[m.id]?.[dk]?.total ?? 0) > 0);
+        );
+      })}
+    </div>
+  );
+
+  // ── Shared: Monthly overview table ──────────────────────────────────────────
+  const OverviewTable = (
+    <div className="overflow-x-auto">
+      <table className="border-collapse text-xs" style={{ tableLayout: "fixed" }}>
+        <colgroup>
+          <col style={{ width: "80px", minWidth: "80px" }} />
+          {Array.from({ length: daysInMonth }, (_, i) => (
+            <col key={i} style={{ width: "28px", minWidth: "28px" }} />
+          ))}
+          <col style={{ width: "40px", minWidth: "40px" }} />
+        </colgroup>
+        <thead>
+          <tr className="border-b">
+            <th className="border-r bg-muted/50 px-2 py-2.5 text-left text-xs font-semibold text-muted-foreground"
+              style={{ position: "sticky", left: 0, zIndex: 2 }}>
+              Member
+            </th>
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const d = i + 1;
+              const isToday = d === new Date().getDate() && month === new Date().getMonth() + 1 && year === new Date().getFullYear();
               return (
-                <button
-                  key={d}
-                  onClick={() => setSelectedDay(d)}
-                  className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-medium transition-colors ${
-                    selectedDay === d
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted"
+                <th key={d}
+                  className={`py-2.5 text-center text-xs font-medium cursor-pointer transition-colors hover:bg-muted/50 ${
+                    selectedDay === d ? "bg-primary/15 text-primary font-bold" : isToday ? "bg-primary/8 text-primary" : "text-muted-foreground"
                   }`}
+                  onClick={() => setSelectedDay(d)}
+                  title={`Day ${d}`}
                 >
                   {d}
-                  {hasMeals && selectedDay !== d && (
-                    <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
-                  )}
-                </button>
+                </th>
               );
             })}
-          </div>
-        </div>
-
-        {/* Member meal inputs */}
-        <div className="divide-y">
-          {visibleMembers.map((member) => {
-            const e = entries[member.id] ?? { breakfast: 0, lunch: 0, dinner: 0 };
-            const dayTotal = e.breakfast + e.lunch + e.dinner;
+            <th className="border-l bg-muted/50 py-2.5 text-center text-xs font-semibold text-primary"
+              style={{ position: "sticky", right: 0, zIndex: 2 }}>
+              ∑
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {members.map((member, idx) => {
+            const rowTotal = Array.from({ length: daysInMonth }, (_, i) => i + 1).reduce((sum, d) => {
+              const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+              return sum + (mealMap[member.id]?.[dk]?.total ?? 0);
+            }, 0);
+            const rowBg = idx % 2 === 0 ? "hsl(var(--background))" : "hsl(var(--muted) / 0.2)";
             return (
-              <div key={member.id} className="px-4 py-3">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                      {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
-                    </div>
-                    <span className="font-medium">{member.user.name ?? member.user.email}</span>
-                  </div>
-                  <span className={`rounded-full px-2.5 py-0.5 text-sm font-bold ${dayTotal > 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                    {dayTotal}
+              <tr key={member.id} className={idx % 2 === 0 ? "bg-background" : "bg-muted/20"}>
+                <td className="border-r py-2.5 pl-2 pr-1 font-medium"
+                  style={{ position: "sticky", left: 0, zIndex: 1, background: rowBg }}>
+                  <span className="block max-w-[72px] truncate text-xs">
+                    {member.user.name?.split(" ")[0] ?? member.user.email.split("@")[0]}
                   </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["breakfast", "lunch", "dinner"] as const).map((meal) => (
-                    <div key={meal} className="space-y-1">
-                      <label className="block text-center text-xs text-muted-foreground capitalize">
-                        {meal === "breakfast" ? "🌅 B" : meal === "lunch" ? "☀️ L" : "🌙 D"}
-                      </label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={1}
-                        className="h-10 text-center text-base font-semibold"
-                        value={e[meal]}
-                        onChange={(ev) =>
-                          setEntries((prev) => ({
-                            ...prev,
-                            [member.id]: { ...prev[member.id], [meal]: parseInt(ev.target.value) || 0 },
-                          }))
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+                </td>
+                {Array.from({ length: daysInMonth }, (_, i) => {
+                  const d = i + 1;
+                  const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+                  const val = mealMap[member.id]?.[dk]?.total ?? 0;
+                  const isSelected = selectedDay === d;
+                  const isToday = d === new Date().getDate() && month === new Date().getMonth() + 1 && year === new Date().getFullYear();
+                  return (
+                    <td key={d}
+                      className={`py-2.5 text-center cursor-pointer transition-colors hover:bg-primary/10 ${
+                        isSelected ? "bg-primary/10" : isToday ? "bg-primary/5" : ""
+                      }`}
+                      onClick={() => setSelectedDay(d)}
+                    >
+                      {val > 0 ? (
+                        <span className="font-bold text-primary">{val}</span>
+                      ) : (
+                        <span className="text-muted-foreground/25">·</span>
+                      )}
+                    </td>
+                  );
+                })}
+                <td className="border-l py-2.5 text-center font-bold text-primary"
+                  style={{ position: "sticky", right: 0, zIndex: 1, background: rowBg }}>
+                  {rowTotal}
+                </td>
+              </tr>
             );
           })}
+        </tbody>
+        <tfoot>
+          <tr className="border-t">
+            <td className="border-r bg-muted/40 py-2.5 pl-2 text-xs font-semibold text-muted-foreground"
+              style={{ position: "sticky", left: 0, zIndex: 1, background: "hsl(var(--muted) / 0.4)" }}>
+              Total
+            </td>
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const d = i + 1;
+              const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+              const dayTotal = members.reduce((sum, m) => sum + (mealMap[m.id]?.[dk]?.total ?? 0), 0);
+              const isSelected = selectedDay === d;
+              return (
+                <td key={d}
+                  className={`py-2.5 text-center text-xs font-semibold ${isSelected ? "bg-primary/10" : "bg-muted/40"}`}
+                  style={!isSelected ? { background: "hsl(var(--muted) / 0.4)" } : undefined}
+                >
+                  {dayTotal > 0 ? <span className="text-foreground">{dayTotal}</span> : <span className="text-muted-foreground/25">·</span>}
+                </td>
+              );
+            })}
+            <td className="border-l bg-muted/40 py-2.5 text-center text-xs font-bold text-primary"
+              style={{ position: "sticky", right: 0, zIndex: 1, background: "hsl(var(--muted) / 0.4)" }}>
+              {members.reduce((sum, m) => sum + Object.values(mealMap[m.id] ?? {}).reduce((s, mc) => s + mc.total, 0), 0)}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+
+  return (
+    <>
+      {/* ══════════════════════════════════════════
+          DESKTOP layout
+      ══════════════════════════════════════════ */}
+      <div className="hidden md:flex md:flex-col md:gap-6">
+        {/* Header row */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Meal Count</h1>
+            <p className="text-muted-foreground">Track daily meals per member</p>
+          </div>
+          <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
         </div>
 
-        {/* Save button */}
-        <div className="border-t p-4">
-          <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving}>
-            <Save className="mr-2 h-4 w-4" />
-            {saving ? "Saving..." : `Save Day ${selectedDay}`}
-          </Button>
+        {/* Two-column layout */}
+        <div className="grid grid-cols-3 gap-6 items-start">
+
+          {/* Left col (2/3): monthly overview table */}
+          <div className="col-span-2 rounded-xl border bg-card">
+            <div className="border-b px-5 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold">Monthly Overview</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Click a day column to edit that day →</p>
+              </div>
+              {/* Member total chips */}
+              <div className="flex flex-wrap gap-2">
+                {memberTotals.map(({ member, total }) => (
+                  <div key={member.id} className="flex items-center gap-1.5 rounded-full border bg-muted/30 px-2.5 py-1">
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                      {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
+                    </div>
+                    <span className="text-xs font-medium">{member.user.name?.split(" ")[0] ?? member.user.email}</span>
+                    <span className="text-xs font-bold text-primary">{total}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {OverviewTable}
+          </div>
+
+          {/* Right col (1/3): day entry panel */}
+          <div className="rounded-xl border bg-card">
+            <div className="border-b px-4 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-semibold">Day {selectedDay} Entry</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Breakfast · Lunch · Dinner</p>
+                </div>
+                {message && <span className="text-sm font-medium text-green-600">{message}</span>}
+              </div>
+              {/* Compact day strip */}
+              <div className="mt-3">{DayStrip}</div>
+            </div>
+
+            {MemberInputs}
+
+            <div className="border-t p-4">
+              <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving}>
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? "Saving..." : `Save Day ${selectedDay}`}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Monthly overview */}
-      {isAdmin && members.length > 0 && (
+      {/* ══════════════════════════════════════════
+          MOBILE layout
+      ══════════════════════════════════════════ */}
+      <div className="space-y-5 md:hidden">
+        <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
+
+        {/* Member total chips */}
+        {memberTotals.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {memberTotals.map(({ member, total }) => (
+              <div key={member.id} className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                  {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
+                </div>
+                <span className="text-sm font-medium">{member.user.name?.split(" ")[0] ?? member.user.email}</span>
+                <span className="text-sm font-bold text-primary">{total}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Day entry card */}
         <div className="rounded-2xl border bg-card">
           <div className="border-b px-4 py-3">
-            <p className="font-semibold">Monthly Overview</p>
-            <p className="text-xs text-muted-foreground">Member · day-by-day totals</p>
-          </div>
-
-          {/* Scrollable table with proper sticky column */}
-          <div className="relative">
-            <div className="overflow-x-auto">
-              <table className="border-collapse text-xs" style={{ tableLayout: "fixed" }}>
-                <colgroup>
-                  {/* Fixed name column */}
-                  <col style={{ width: "72px", minWidth: "72px" }} />
-                  {/* Day columns */}
-                  {Array.from({ length: daysInMonth }, (_, i) => (
-                    <col key={i} style={{ width: "26px", minWidth: "26px" }} />
-                  ))}
-                  {/* Total column */}
-                  <col style={{ width: "36px", minWidth: "36px" }} />
-                </colgroup>
-
-                <thead>
-                  <tr className="border-b">
-                    {/* Sticky header name cell */}
-                    <th
-                      className="border-r bg-muted/60 px-2 py-2 text-left font-semibold text-muted-foreground"
-                      style={{ position: "sticky", left: 0, zIndex: 2 }}
-                    >
-                      Name
-                    </th>
-                    {Array.from({ length: daysInMonth }, (_, i) => {
-                      const d = i + 1;
-                      const isToday =
-                        d === new Date().getDate() &&
-                        month === new Date().getMonth() + 1 &&
-                        year === new Date().getFullYear();
-                      return (
-                        <th
-                          key={d}
-                          className={`py-2 text-center font-medium ${
-                            isToday
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          {d}
-                        </th>
-                      );
-                    })}
-                    <th
-                      className="border-l bg-muted/60 py-2 text-center font-semibold text-primary"
-                      style={{ position: "sticky", right: 0, zIndex: 2 }}
-                    >
-                      ∑
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {members.map((member, idx) => {
-                    const rowTotal = Array.from({ length: daysInMonth }, (_, i) => i + 1).reduce(
-                      (sum, d) => {
-                        const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-                        return sum + (mealMap[member.id]?.[dk]?.total ?? 0);
-                      },
-                      0
-                    );
-
-                    return (
-                      <tr
-                        key={member.id}
-                        className={idx % 2 === 0 ? "bg-background" : "bg-muted/20"}
-                      >
-                        {/* Sticky name cell */}
-                        <td
-                          className="border-r py-2 pl-2 pr-1 font-medium"
-                          style={{
-                            position: "sticky",
-                            left: 0,
-                            zIndex: 1,
-                            background: idx % 2 === 0 ? "hsl(var(--background))" : "hsl(var(--muted) / 0.2)",
-                          }}
-                        >
-                          <span className="block max-w-[64px] truncate">
-                            {member.user.name?.split(" ")[0] ?? member.user.email.split("@")[0]}
-                          </span>
-                        </td>
-
-                        {/* Day cells */}
-                        {Array.from({ length: daysInMonth }, (_, i) => {
-                          const d = i + 1;
-                          const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-                          const val = mealMap[member.id]?.[dk]?.total ?? 0;
-                          const isToday =
-                            d === new Date().getDate() &&
-                            month === new Date().getMonth() + 1 &&
-                            year === new Date().getFullYear();
-                          return (
-                            <td
-                              key={d}
-                              className={`py-2 text-center ${isToday ? "bg-primary/5" : ""}`}
-                            >
-                              {val > 0 ? (
-                                <span className="font-bold text-primary">{val}</span>
-                              ) : (
-                                <span className="text-muted-foreground/30">·</span>
-                              )}
-                            </td>
-                          );
-                        })}
-
-                        {/* Sticky total cell */}
-                        <td
-                          className="border-l py-2 text-center font-bold text-primary"
-                          style={{
-                            position: "sticky",
-                            right: 0,
-                            zIndex: 1,
-                            background: idx % 2 === 0 ? "hsl(var(--background))" : "hsl(var(--muted) / 0.2)",
-                          }}
-                        >
-                          {rowTotal}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-
-                {/* Footer: column totals */}
-                <tfoot>
-                  <tr className="border-t bg-muted/40">
-                    <td
-                      className="border-r py-2 pl-2 text-xs font-semibold text-muted-foreground"
-                      style={{ position: "sticky", left: 0, zIndex: 1, background: "hsl(var(--muted) / 0.4)" }}
-                    >
-                      Total
-                    </td>
-                    {Array.from({ length: daysInMonth }, (_, i) => {
-                      const d = i + 1;
-                      const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-                      const dayTotal = members.reduce(
-                        (sum, m) => sum + (mealMap[m.id]?.[dk]?.total ?? 0),
-                        0
-                      );
-                      return (
-                        <td key={d} className="py-2 text-center text-xs font-semibold">
-                          {dayTotal > 0 ? (
-                            <span className="text-foreground">{dayTotal}</span>
-                          ) : (
-                            <span className="text-muted-foreground/30">·</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                    <td
-                      className="border-l py-2 text-center text-xs font-bold text-primary"
-                      style={{ position: "sticky", right: 0, zIndex: 1, background: "hsl(var(--muted) / 0.4)" }}
-                    >
-                      {members.reduce((sum, m) => {
-                        return sum + Object.values(mealMap[m.id] ?? {}).reduce((s, mc) => s + mc.total, 0);
-                      }, 0)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+            <div className="flex items-center justify-between">
+              <p className="font-semibold">Daily Entry</p>
+              {message && <span className="text-sm font-medium text-green-600">{message}</span>}
             </div>
+            <div className="mt-3">{DayStrip}</div>
+          </div>
+          {MemberInputs}
+          <div className="border-t p-4">
+            <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving}>
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? "Saving..." : `Save Day ${selectedDay}`}
+            </Button>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Monthly overview */}
+        {isAdmin && members.length > 0 && (
+          <div className="rounded-2xl border bg-card">
+            <div className="border-b px-4 py-3">
+              <p className="font-semibold">Monthly Overview</p>
+              <p className="text-xs text-muted-foreground">Scroll horizontally · tap day to edit</p>
+            </div>
+            {OverviewTable}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

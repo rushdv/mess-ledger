@@ -16,6 +16,8 @@ interface MemberSummary {
   totalMeals: number;
   mealCost: number;
   utilityShare: number;
+  individualCost: number;
+  sharedCost: number;
   totalCost: number;
   totalPaid: number;
   due: number;
@@ -27,7 +29,11 @@ interface ReportData {
   totalMeals: number;
   totalBazarCost: number;
   totalUtility: number;
+  totalIndividual: number;
+  totalShared: number;
   totalCost: number;
+  totalCollected: number;
+  messBalance: number;
   mealRate: number;
   utilityPerHead: number;
   memberSummaries: MemberSummary[];
@@ -114,6 +120,24 @@ export default function ReportPage() {
               ))}
             </div>
 
+            {/* Mess Balance banner */}
+            <div className={`rounded-xl border p-5 flex items-center justify-between ${report.messBalance >= 0 ? "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800" : "bg-red-50 border-red-200 dark:bg-red-950/50 dark:border-red-800"}`}>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Mess Balance</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Total Collected ({formatCurrency(report.totalCollected)}) − Total Cost ({formatCurrency(report.totalCost)})
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={`text-3xl font-bold ${report.messBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                  {report.messBalance >= 0 ? "+" : ""}{formatCurrency(report.messBalance)}
+                </p>
+                <p className={`text-xs font-medium mt-0.5 ${report.messBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                  {report.messBalance >= 0 ? "Surplus" : "Deficit"}
+                </p>
+              </div>
+            </div>
+
             {/* Two-column: table + chart */}
             <div className="grid grid-cols-3 gap-6">
               {/* Member summary table */}
@@ -128,6 +152,8 @@ export default function ReportPage() {
                       <th className="px-4 py-3 text-right font-medium text-muted-foreground">Meals</th>
                       <th className="px-4 py-3 text-right font-medium text-muted-foreground">Meal Cost</th>
                       <th className="px-4 py-3 text-right font-medium text-muted-foreground">Utility</th>
+                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">Individual</th>
+                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">Shared</th>
                       <th className="px-4 py-3 text-right font-medium text-muted-foreground">Total</th>
                       <th className="px-4 py-3 text-right font-medium text-muted-foreground">Paid</th>
                       <th className="px-5 py-3 text-right font-medium text-muted-foreground">Due</th>
@@ -147,10 +173,12 @@ export default function ReportPage() {
                         <td className="px-4 py-3 text-right">{s.totalMeals}</td>
                         <td className="px-4 py-3 text-right">{formatCurrency(s.mealCost)}</td>
                         <td className="px-4 py-3 text-right">{formatCurrency(s.utilityShare)}</td>
+                        <td className="px-4 py-3 text-right">{formatCurrency(s.individualCost)}</td>
+                        <td className="px-4 py-3 text-right">{formatCurrency(s.sharedCost)}</td>
                         <td className="px-4 py-3 text-right font-medium">{formatCurrency(s.totalCost)}</td>
-                        <td className="px-4 py-3 text-right text-green-600">{formatCurrency(s.totalPaid)}</td>
+                        <td className="px-4 py-3 text-right text-green-600 dark:text-green-400">{formatCurrency(s.totalPaid)}</td>
                         <td className="px-5 py-3 text-right">
-                          <span className={`font-semibold ${s.due > 0 ? "text-red-600" : "text-green-600"}`}>
+                          <span className={`font-semibold ${s.due > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
                             {s.due > 0 ? "-" : "+"}{formatCurrency(Math.abs(s.due))}
                           </span>
                         </td>
@@ -163,8 +191,10 @@ export default function ReportPage() {
                       <td className="px-4 py-3 text-right font-semibold">{report.totalMeals}</td>
                       <td className="px-4 py-3 text-right font-semibold">{formatCurrency(report.totalBazarCost)}</td>
                       <td className="px-4 py-3 text-right font-semibold">{formatCurrency(report.totalUtility)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">{formatCurrency(report.totalIndividual ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">{formatCurrency(report.totalShared ?? 0)}</td>
                       <td className="px-4 py-3 text-right font-semibold">{formatCurrency(report.totalCost)}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-green-600">
+                      <td className="px-4 py-3 text-right font-semibold text-green-600 dark:text-green-400">
                         {formatCurrency(report.memberSummaries.reduce((s, m) => s + m.totalPaid, 0))}
                       </td>
                       <td className="px-5 py-3" />
@@ -238,6 +268,36 @@ export default function ReportPage() {
                 <p className="text-xs text-muted-foreground">Utility Cost</p>
                 <p className="mt-1 text-xl font-bold">{formatCurrency(report.totalUtility)}</p>
               </div>
+              {(report.totalIndividual ?? 0) > 0 && (
+                <div className="rounded-2xl border bg-card p-4 col-span-2">
+                  <p className="text-xs text-muted-foreground">Individual Costs</p>
+                  <p className="mt-1 text-xl font-bold text-rose-600 dark:text-rose-400">{formatCurrency(report.totalIndividual ?? 0)}</p>
+                </div>
+              )}
+              {(report.totalShared ?? 0) > 0 && (
+                <div className="rounded-2xl border bg-card p-4 col-span-2">
+                  <p className="text-xs text-muted-foreground">Shared Costs</p>
+                  <p className="mt-1 text-xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(report.totalShared ?? 0)}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Mess Balance */}
+            <div className={`rounded-2xl border p-4 ${report.messBalance >= 0 ? "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800" : "bg-red-50 border-red-200 dark:bg-red-950/50 dark:border-red-800"}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Mess Balance</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Collected − Cost</p>
+                </div>
+                <div className="text-right">
+                  <p className={`text-2xl font-bold ${report.messBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                    {report.messBalance >= 0 ? "+" : ""}{formatCurrency(report.messBalance)}
+                  </p>
+                  <p className={`text-xs font-medium ${report.messBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                    {report.messBalance >= 0 ? "Surplus" : "Deficit"}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {chartData && chartData.length > 0 && (
@@ -292,8 +352,20 @@ export default function ReportPage() {
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground">Paid</p>
-                        <p className="text-sm font-semibold text-green-600">{formatCurrency(s.totalPaid)}</p>
+                        <p className="text-sm font-semibold text-green-600 dark:text-green-400">{formatCurrency(s.totalPaid)}</p>
                       </div>
+                      {s.individualCost > 0 && (
+                        <div className="text-center col-span-3 border-t pt-2 mt-1">
+                          <p className="text-xs text-muted-foreground">Individual</p>
+                          <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">{formatCurrency(s.individualCost)}</p>
+                        </div>
+                      )}
+                      {s.sharedCost > 0 && (
+                        <div className="text-center col-span-3 border-t pt-2 mt-1">
+                          <p className="text-xs text-muted-foreground">Shared</p>
+                          <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">{formatCurrency(s.sharedCost)}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
