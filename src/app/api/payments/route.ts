@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(payment, { status: 201 });
 }
 
-// DELETE /api/payments?id=xxx (admin only)
+// DELETE /api/payments?id=xxx (admin or moderator)
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -90,7 +90,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   const messContext = await getMessContext();
-  if (!messContext || !messContext.isMessAdmin) {
+  if (!messContext || !messContext.canManage) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -100,6 +100,14 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
 
-  await prisma.payment.delete({ where: { id, messId: messContext.messId } });
+  // Use deleteMany so we can filter by both id AND messId (security check)
+  const result = await prisma.payment.deleteMany({
+    where: { id, messId: messContext.messId },
+  });
+
+  if (result.count === 0) {
+    return NextResponse.json({ error: "Payment not found" }, { status: 404 });
+  }
+
   return NextResponse.json({ success: true });
 }

@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(entry, { status: 201 });
 }
 
-// DELETE /api/shared-cost?id=xxx (admin only)
+// DELETE /api/shared-cost?id=xxx (admin or moderator)
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -101,7 +101,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   const messContext = await getMessContext();
-  if (!messContext || !messContext.isMessAdmin) {
+  if (!messContext || !messContext.canManage) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -111,6 +111,13 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
 
-  await prisma.sharedCost.delete({ where: { id, messId: messContext.messId } });
+  const result = await prisma.sharedCost.deleteMany({
+    where: { id, messId: messContext.messId },
+  });
+
+  if (result.count === 0) {
+    return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+  }
+
   return NextResponse.json({ success: true });
 }
