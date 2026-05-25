@@ -119,7 +119,7 @@
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/mess-ledger.git
+git clone https://github.com/rushdv/mess-ledger.git
 cd mess-ledger
 
 # 2. Install dependencies
