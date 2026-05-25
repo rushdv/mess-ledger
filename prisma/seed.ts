@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -15,7 +15,7 @@ async function main() {
       email: "admin@messledger.com",
       name: "Mess Admin",
       password: adminPassword,
-      role: Role.ADMIN,
+      role: "ADMIN",
       member: {
         create: {
           phone: "01700000000",
@@ -40,7 +40,7 @@ async function main() {
         email: m.email,
         name: m.name,
         password: memberPassword,
-        role: Role.MEMBER,
+        role: "MEMBER",
         member: {
           create: { phone: m.phone },
         },

@@ -16,7 +16,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  role          Role      @default(MEMBER)
+  role          String    @default("MEMBER") // ADMIN | MEMBER
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -59,11 +59,6 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-enum Role {
-  ADMIN
-  MEMBER
 }
 
 // ─── Mess Core ───────────────────────────────────────────────────────────────
@@ -114,23 +109,15 @@ model BazarCost {
 
 // Monthly utility costs (electricity, gas, water, etc.)
 model UtilityCost {
-  id          String      @id @default(cuid())
+  id          String   @id @default(cuid())
   month       Int
   year        Int
-  type        UtilityType
+  type        String   // ELECTRICITY | GAS | WATER | INTERNET | OTHER
   amount      Float
   description String?
-  addedBy     String      // userId
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-}
-
-enum UtilityType {
-  ELECTRICITY
-  GAS
-  WATER
-  INTERNET
-  OTHER
+  addedBy     String   // userId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // Member payments (deposits)
