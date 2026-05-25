@@ -275,7 +275,7 @@ member_due = member_total - member_paid
 
 ### Deploy to Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/mess-ledger)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/rushdv/mess-ledger)
 
 1. Click the button above or push to GitHub
 2. Import project in Vercel
