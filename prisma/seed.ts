@@ -16,11 +16,6 @@ async function main() {
       name: "Mess Admin",
       password: adminPassword,
       role: "ADMIN",
-      member: {
-        create: {
-          phone: "01700000000",
-        },
-      },
     },
   });
 
@@ -32,8 +27,9 @@ async function main() {
     { name: "Jamal", email: "jamal@messledger.com", phone: "01733333333" },
   ];
 
+  const members = [];
   for (const m of memberData) {
-    await prisma.user.upsert({
+    const user = await prisma.user.upsert({
       where: { email: m.email },
       update: {},
       create: {
@@ -41,9 +37,56 @@ async function main() {
         name: m.name,
         password: memberPassword,
         role: "MEMBER",
-        member: {
-          create: { phone: m.phone },
-        },
+      },
+    });
+    members.push({ user, phone: m.phone });
+  }
+
+  // Create a demo mess
+  const demoMess = await prisma.mess.create({
+    data: {
+      name: "Demo Mess",
+      code: "DEMO2024",
+      description: "Demo mess for testing",
+      createdBy: admin.id,
+    },
+  });
+
+  console.log(`✅ Created mess: ${demoMess.name} (Code: ${demoMess.code})`);
+
+  // Add admin as mess admin
+  await prisma.messMember.create({
+    data: {
+      userId: admin.id,
+      messId: demoMess.id,
+      role: "ADMIN",
+    },
+  });
+
+  // Create Member record for admin
+  await prisma.member.create({
+    data: {
+      userId: admin.id,
+      messId: demoMess.id,
+      phone: "01700000000",
+    },
+  });
+
+  // Add members to the mess
+  for (const m of members) {
+    await prisma.messMember.create({
+      data: {
+        userId: m.user.id,
+        messId: demoMess.id,
+        role: "MEMBER",
+      },
+    });
+
+    await prisma.member.create({
+      data: {
+        userId: m.user.id,
+        messId: demoMess.id,
+        phone: m.phone,
       },
     });
   }
@@ -51,6 +94,7 @@ async function main() {
   console.log("✅ Seed complete!");
   console.log("   Admin: admin@messledger.com / admin123");
   console.log("   Members: rahim/karim/jamal@messledger.com / member123");
+  console.log(`   Mess Code: ${demoMess.code}`);
 }
 
 main()

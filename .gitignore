@@ -37,4 +37,11 @@ next-env.d.ts
 # prisma
 prisma/dev.db
 prisma/dev.db-journal
-.env*
+prisma/*.db-*
+
+# development docs (keep only main docs)
+*_COMPLETE.md
+*_SUMMARY.md
+*_INSTRUCTIONS.md
+*_UPDATES.md
+fix-*.sh
