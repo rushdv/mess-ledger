@@ -16,7 +16,7 @@ import {
 
 interface Member { id: string; user: { name: string | null; email: string }; }
 interface Payment {
-  id: string; memberId: string; amount: number; note: string | null; createdAt: string;
+  id: string; memberId: string; amount: number; note: string | null; date: string; createdAt: string;
   member: { user: { name: string | null; email: string } };
 }
 
@@ -27,7 +27,12 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ memberId: "", amount: "", note: "" });
+  const [form, setForm] = useState({ 
+    memberId: "", 
+    amount: "", 
+    note: "",
+    date: new Date().toISOString().split('T')[0]
+  });
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -43,9 +48,25 @@ export default function PaymentsPage() {
     e.preventDefault(); setLoading(true);
     const res = await fetch("/api/payments", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ memberId: form.memberId, month, year, amount: parseFloat(form.amount), note: form.note || null }),
+      body: JSON.stringify({ 
+        memberId: form.memberId, 
+        month, 
+        year, 
+        amount: parseFloat(form.amount), 
+        note: form.note || null,
+        date: form.date
+      }),
     });
-    if (res.ok) { setForm({ memberId: "", amount: "", note: "" }); setOpen(false); fetchData(); }
+    if (res.ok) { 
+      setForm({ 
+        memberId: "", 
+        amount: "", 
+        note: "",
+        date: new Date().toISOString().split('T')[0]
+      }); 
+      setOpen(false); 
+      fetchData(); 
+    }
     setLoading(false);
   }
 
@@ -62,6 +83,17 @@ export default function PaymentsPage() {
       <DialogContent className="mx-4 rounded-2xl sm:mx-auto">
         <DialogHeader><DialogTitle>Record Payment</DialogTitle></DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="p-date">Date</Label>
+            <Input 
+              id="p-date" 
+              type="date" 
+              value={form.date} 
+              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
+              required 
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
           <div className="space-y-2">
             <Label>Member</Label>
             <Select value={form.memberId} onValueChange={(v) => setForm((p) => ({ ...p, memberId: v }))}>
@@ -96,7 +128,7 @@ export default function PaymentsPage() {
             <div>
               <p className="font-medium">{payment.member.user.name ?? payment.member.user.email}</p>
               {payment.note && <p className="text-xs text-muted-foreground">{payment.note}</p>}
-              <p className="text-xs text-muted-foreground">{formatDate(payment.createdAt)}</p>
+              <p className="text-xs text-muted-foreground">{formatDate(payment.date)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
