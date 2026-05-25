@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +14,10 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -46,24 +51,74 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-        };
+        } as any;
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, trigger }) {
+      // On sign in, add user info to token
       if (user) {
-        token.role = (user as { id: string; role: string }).role;
         token.id = user.id;
+        token.role = (user as { id: string; role?: string }).role || "MEMBER";
       }
+      
+      // For Google OAuth, ensure we have the user ID from database
+      if (account?.provider === "google" && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
       }
       return session;
+    },
+    async signIn({ user, account, profile }) {
+      // For Google OAuth, check if user exists and create Member if needed
+      if (account?.provider === "google") {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+          include: { messMembers: true },
+        });
+
+        // If user exists but doesn't have any mess membership, add to demo mess
+        if (existingUser && existingUser.messMembers.length === 0) {
+          // Find demo mess or first available mess
+          const demoMess = await prisma.mess.findFirst({
+            where: { code: "DEMO2024" },
+          });
+
+          if (demoMess) {
+            // Create MessMember
+            await prisma.messMember.create({
+              data: {
+                userId: existingUser.id,
+                messId: demoMess.id,
+                role: "MEMBER",
+              },
+            });
+
+            // Create Member record
+            await prisma.member.create({
+              data: {
+                userId: existingUser.id,
+                messId: demoMess.id,
+              },
+            });
+          }
+        }
+      }
+      return true;
     },
   },
 };

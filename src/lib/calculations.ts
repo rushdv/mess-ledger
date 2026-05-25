@@ -31,11 +31,15 @@ export interface MonthlyCalculation {
 
 export async function calculateMonthly(
   month: number,
-  year: number
+  year: number,
+  messId: string
 ): Promise<MonthlyCalculation> {
-  // Get all active members
+  // Get all active members for this mess
   const members = await prisma.member.findMany({
-    where: { isActive: true },
+    where: { 
+      isActive: true,
+      messId: messId,
+    },
     include: { user: true },
   });
 
@@ -45,33 +49,34 @@ export async function calculateMonthly(
 
   const mealCounts = await prisma.mealCount.findMany({
     where: {
+      messId: messId,
       date: { gte: startDate, lte: endDate },
     },
   });
 
   // Get bazar costs for the month
   const bazarCosts = await prisma.bazarCost.findMany({
-    where: { month, year },
+    where: { messId: messId, month, year },
   });
 
   // Get utility costs for the month
   const utilityCosts = await prisma.utilityCost.findMany({
-    where: { month, year },
+    where: { messId: messId, month, year },
   });
 
   // Get payments for the month
   const payments = await prisma.payment.findMany({
-    where: { month, year },
+    where: { messId: messId, month, year },
   });
 
   // Get individual costs for the month
   const individualCosts = await prisma.individualCost.findMany({
-    where: { month, year },
+    where: { messId: messId, month, year },
   });
 
   // Get shared costs for the month (with member list)
   const sharedCosts = await prisma.sharedCost.findMany({
-    where: { month, year },
+    where: { messId: messId, month, year },
     include: { members: true },
   });
 
@@ -154,9 +159,9 @@ export async function calculateMonthly(
 }
 
 // Save/update the monthly report in DB
-export async function saveMonthlyReport(calc: MonthlyCalculation) {
+export async function saveMonthlyReport(calc: MonthlyCalculation, messId: string) {
   const report = await prisma.monthlyReport.upsert({
-    where: { month_year: { month: calc.month, year: calc.year } },
+    where: { messId_month_year: { messId: messId, month: calc.month, year: calc.year } },
     update: {
       totalMeals: calc.totalMeals,
       totalBazarCost: calc.totalBazarCost,
@@ -182,6 +187,7 @@ export async function saveMonthlyReport(calc: MonthlyCalculation) {
       },
     },
     create: {
+      messId: messId,
       month: calc.month,
       year: calc.year,
       totalMeals: calc.totalMeals,
