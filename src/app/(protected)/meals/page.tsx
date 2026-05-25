@@ -171,6 +171,7 @@ export default function MealsPage() {
                         [member.id]: { ...prev[member.id], [meal]: parseInt(ev.target.value) || 0 },
                       }))
                     }
+                    disabled={!isAdmin}
                   />
                 </div>
               ))}
@@ -351,10 +352,13 @@ export default function MealsPage() {
             {MemberInputs}
 
             <div className="border-t p-4">
-              <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving}>
+              <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !isAdmin}>
                 <Save className="mr-2 h-4 w-4" />
                 {saving ? "Saving..." : `Save Day ${selectedDay}`}
               </Button>
+              {!isAdmin && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">Only admin can add meals</p>
+              )}
             </div>
           </div>
         </div>
@@ -392,10 +396,13 @@ export default function MealsPage() {
           </div>
           {MemberInputs}
           <div className="border-t p-4">
-            <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving}>
+            <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !isAdmin}>
               <Save className="mr-2 h-4 w-4" />
               {saving ? "Saving..." : `Save Day ${selectedDay}`}
             </Button>
+            {!isAdmin && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">Only admin can add meals</p>
+            )}
           </div>
         </div>
 
