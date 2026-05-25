@@ -1,17 +1,22 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useMessContext } from "@/hooks/use-mess-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, UserX, UserCheck, Phone, Mail, Shield, Users } from "lucide-react";
+import { Plus, UserX, UserCheck, Phone, Mail, Shield, Users, Crown, UserCog } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 
 interface Member {
-  id: string; phone: string | null; isActive: boolean; joinedAt: string;
+  id: string; 
+  phone: string | null; 
+  isActive: boolean; 
+  joinedAt: string;
+  messRole?: string; // ADMIN | MODERATOR | MEMBER
   user: { id: string; name: string | null; email: string; role: string };
 }
 
@@ -21,10 +26,16 @@ export default function MembersPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { messContext } = useMessContext();
+  
+  // Use mess-specific role
+  const currentUserRole = messContext?.userRole || "MEMBER";
+  const isMessAdmin = messContext?.isMessAdmin ?? false;
 
   const fetchMembers = useCallback(async () => {
     const res = await fetch("/api/members");
-    setMembers(await res.json());
+    const data = await res.json();
+    setMembers(data);
   }, []);
 
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
@@ -46,6 +57,20 @@ export default function MembersPage() {
       body: JSON.stringify({ isActive: !member.isActive }),
     });
     fetchMembers();
+  }
+
+  async function changeRole(memberId: string, newRole: string) {
+    const res = await fetch(`/api/members/${memberId}/role`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: newRole }),
+    });
+    if (res.ok) {
+      fetchMembers();
+    } else {
+      const data = await res.json();
+      alert(data.error || "Failed to change role");
+    }
   }
 
   const active = members.filter((m) => m.isActive);
@@ -82,43 +107,78 @@ export default function MembersPage() {
     </Dialog>
   );
 
-  const MemberRow = ({ member }: { member: Member }) => (
-    <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4">
-      <div className="flex items-center gap-3">
-        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
-          {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
-          {member.user.role === "ADMIN" && (
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
-              <Shield className="h-2.5 w-2.5 text-primary-foreground" />
-            </span>
-          )}
-        </div>
-        <div>
-          <p className="font-medium">{member.user.name ?? member.user.email}</p>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Mail className="h-3 w-3" /><span className="truncate max-w-[180px]">{member.user.email}</span>
+  const MemberRow = ({ member }: { member: Member }) => {
+    const isAdmin = member.messRole === "ADMIN";
+    const isModerator = member.messRole === "MODERATOR";
+    const canChangeRole = isMessAdmin && !isAdmin; // Only admin can change roles, and cannot change other admins
+    
+    return (
+      <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4">
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
+            {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
+            {isAdmin && (
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                <Crown className="h-2.5 w-2.5 text-white" />
+              </span>
+            )}
+            {isModerator && (
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
+                <Shield className="h-2.5 w-2.5 text-white" />
+              </span>
+            )}
           </div>
-          {member.phone && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Phone className="h-3 w-3" /><span>{member.phone}</span>
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium">{member.user.name ?? member.user.email}</p>
+              {isAdmin && (
+                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-300">
+                  Admin
+                </span>
+              )}
+              {isModerator && (
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                  Moderator
+                </span>
+              )}
             </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Mail className="h-3 w-3" /><span className="truncate max-w-[180px]">{member.user.email}</span>
+            </div>
+            {member.phone && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Phone className="h-3 w-3" /><span>{member.phone}</span>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Joined {formatDate(member.joinedAt)}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {canChangeRole && (
+            <select
+              value={member.messRole || "MEMBER"}
+              onChange={(e) => changeRole(member.id, e.target.value)}
+              className="rounded-lg border bg-background px-2 py-1 text-xs font-medium"
+            >
+              <option value="MEMBER">Member</option>
+              <option value="MODERATOR">Moderator</option>
+            </select>
           )}
-          <p className="text-xs text-muted-foreground">Joined {formatDate(member.joinedAt)}</p>
+          <button
+            onClick={() => toggleActive(member)}
+            className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
+              member.isActive
+                ? "text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
+                : "text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
+            }`}
+            aria-label={member.isActive ? "Deactivate" : "Reactivate"}
+          >
+            {member.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+          </button>
         </div>
       </div>
-      <button
-        onClick={() => toggleActive(member)}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
-          member.isActive
-            ? "text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
-            : "text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
-        }`}
-        aria-label={member.isActive ? "Deactivate" : "Reactivate"}
-      >
-        {member.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-      </button>
-    </div>
-  );
+    );
+  };
 
   return (
     <>
