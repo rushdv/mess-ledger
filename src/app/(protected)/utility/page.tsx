@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MonthPicker } from "@/components/layout/month-picker";
-import { getCurrentMonthYear, formatCurrency } from "@/lib/utils";
+import { getCurrentMonthYear, formatCurrency, formatDate } from "@/lib/utils";
 import { Plus, Trash2, Zap, Droplets, Flame, Wifi, MoreHorizontal } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-const UTILITY_TYPES = ["ELECTRICITY", "GAS", "WATER", "INTERNET", "OTHER"] as const;
+const UTILITY_TYPES = ["ELECTRICITY", "GAS", "WATER", "INTERNET", "DUST", "OTHER"] as const;
 type UtilityType = (typeof UTILITY_TYPES)[number];
 
 const typeConfig: Record<UtilityType, { label: string; icon: React.ElementType; color: string; bg: string }> = {
@@ -22,6 +22,7 @@ const typeConfig: Record<UtilityType, { label: string; icon: React.ElementType; 
   GAS:         { label: "Gas",         icon: Flame,         color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950" },
   WATER:       { label: "Water",       icon: Droplets,      color: "text-blue-600 dark:text-blue-400",     bg: "bg-blue-50 dark:bg-blue-950"     },
   INTERNET:    { label: "Internet",    icon: Wifi,          color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950" },
+  DUST:        { label: "Dust Bill",   icon: Trash2,        color: "text-green-600 dark:text-green-400",   bg: "bg-green-50 dark:bg-green-950"   },
   OTHER:       { label: "Other",       icon: MoreHorizontal,color: "text-gray-600 dark:text-gray-400",     bg: "bg-gray-100 dark:bg-gray-800"    },
 };
 
@@ -30,6 +31,7 @@ interface UtilityEntry {
   type: UtilityType;
   amount: number;
   description: string | null;
+  date: string;
   createdAt: string;
 }
 
@@ -39,7 +41,12 @@ export default function UtilityPage() {
   const [year, setYear] = useState(initYear);
   const [entries, setEntries] = useState<UtilityEntry[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ type: "ELECTRICITY" as UtilityType, amount: "", description: "" });
+  const [form, setForm] = useState({ 
+    type: "ELECTRICITY" as UtilityType, 
+    amount: "", 
+    description: "",
+    date: new Date().toISOString().split('T')[0]
+  });
   const [loading, setLoading] = useState(false);
 
   const fetchEntries = useCallback(async () => {
@@ -61,9 +68,25 @@ export default function UtilityPage() {
     const res = await fetch("/api/utility", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ month, year, type: form.type, amount: parseFloat(form.amount), description: form.description || null }),
+      body: JSON.stringify({ 
+        month, 
+        year, 
+        type: form.type, 
+        amount: parseFloat(form.amount), 
+        description: form.description || null,
+        date: form.date
+      }),
     });
-    if (res.ok) { setForm({ type: "ELECTRICITY", amount: "", description: "" }); setOpen(false); fetchEntries(); }
+    if (res.ok) { 
+      setForm({ 
+        type: "ELECTRICITY", 
+        amount: "", 
+        description: "",
+        date: new Date().toISOString().split('T')[0]
+      }); 
+      setOpen(false); 
+      fetchEntries(); 
+    }
     setLoading(false);
   }
 
@@ -81,6 +104,17 @@ export default function UtilityPage() {
       <DialogContent className="mx-4 rounded-2xl sm:mx-auto">
         <DialogHeader><DialogTitle>Add Utility Cost</DialogTitle></DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="u-date">Date</Label>
+            <Input 
+              id="u-date" 
+              type="date" 
+              value={form.date} 
+              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
+              required 
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
           <div className="space-y-2">
             <Label>Type</Label>
             <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v as UtilityType }))}>
@@ -119,6 +153,7 @@ export default function UtilityPage() {
                 <p className="font-semibold">{formatCurrency(entry.amount)}</p>
                 <p className="text-xs text-muted-foreground">{cfg.label}</p>
                 {entry.description && <p className="text-xs text-muted-foreground">{entry.description}</p>}
+                <p className="text-xs text-muted-foreground">{formatDate(entry.date)}</p>
               </div>
             </div>
             <button onClick={() => handleDelete(entry.id)}
