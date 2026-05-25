@@ -42,59 +42,75 @@ async function main() {
     members.push({ user, phone: m.phone });
   }
 
-  // Create a demo mess
-  const demoMess = await prisma.mess.create({
-    data: {
-      name: "Demo Mess",
-      code: "DEMO2024",
-      description: "Demo mess for testing",
-      createdBy: admin.id,
-    },
+  // Check if demo mess already exists
+  let demoMess = await prisma.mess.findUnique({
+    where: { code: "DEMO2024" },
   });
 
-  console.log(`✅ Created mess: ${demoMess.name} (Code: ${demoMess.code})`);
-
-  // Add admin as mess admin
-  await prisma.messMember.create({
-    data: {
-      userId: admin.id,
-      messId: demoMess.id,
-      role: "ADMIN",
-    },
-  });
-
-  // Create Member record for admin
-  await prisma.member.create({
-    data: {
-      userId: admin.id,
-      messId: demoMess.id,
-      phone: "01700000000",
-    },
-  });
-
-  // Add members to the mess
-  for (const m of members) {
-    await prisma.messMember.create({
+  if (!demoMess) {
+    demoMess = await prisma.mess.create({
       data: {
-        userId: m.user.id,
-        messId: demoMess.id,
-        role: "MEMBER",
+        name: "Demo Mess",
+        code: "DEMO2024",
+        description: "Demo mess for testing",
+        createdBy: admin.id,
       },
     });
 
-    await prisma.member.create({
-      data: {
-        userId: m.user.id,
+    console.log(`✅ Created mess: ${demoMess.name} (Code: ${demoMess.code})`);
+
+    // Add admin as mess admin
+    await prisma.messMember.upsert({
+      where: { userId_messId: { userId: admin.id, messId: demoMess.id } },
+      update: {},
+      create: {
+        userId: admin.id,
         messId: demoMess.id,
-        phone: m.phone,
+        role: "ADMIN",
       },
     });
+
+    // Create Member record for admin
+    await prisma.member.upsert({
+      where: { userId_messId: { userId: admin.id, messId: demoMess.id } },
+      update: {},
+      create: {
+        userId: admin.id,
+        messId: demoMess.id,
+        phone: "01700000000",
+      },
+    });
+
+    // Add members to the mess
+    for (const m of members) {
+      await prisma.messMember.upsert({
+        where: { userId_messId: { userId: m.user.id, messId: demoMess.id } },
+        update: {},
+        create: {
+          userId: m.user.id,
+          messId: demoMess.id,
+          role: "MEMBER",
+        },
+      });
+
+      await prisma.member.upsert({
+        where: { userId_messId: { userId: m.user.id, messId: demoMess.id } },
+        update: {},
+        create: {
+          userId: m.user.id,
+          messId: demoMess.id,
+          phone: m.phone,
+        },
+      });
+    }
+  } else {
+    console.log(`ℹ️ Demo mess ${demoMess.code} already exists, skipping creation.`);
   }
 
   console.log("✅ Seed complete!");
   console.log("   Admin: admin@messledger.com / admin123");
   console.log("   Members: rahim/karim/jamal@messledger.com / member123");
-  console.log(`   Mess Code: ${demoMess.code}`);
+  console.log(`   Mess Code: DEMO2024`);
 }
 
 main()
