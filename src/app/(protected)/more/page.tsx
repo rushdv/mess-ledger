@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Zap, CreditCard, Users, LogOut, ChevronRight, Receipt, Share2, Sun, Moon, Monitor } from "lucide-react";
+import { useMessContext } from "@/hooks/use-mess-context";
+import { Zap, CreditCard, Users, LogOut, ChevronRight, Receipt, Share2, Sun, Moon, Monitor, Building2, BookOpen } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
@@ -22,10 +23,14 @@ const themeOptions = [
 
 export default function MorePage() {
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "ADMIN";
+  const { messContext } = useMessContext();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  
+  // Use mess-specific role
+  const canManage = messContext?.canManage ?? false;
+  const isMessAdmin = messContext?.isMessAdmin ?? false;
 
   return (
     <div className="space-y-6">
@@ -38,8 +43,8 @@ export default function MorePage() {
           <div>
             <p className="text-lg font-semibold">{session?.user?.name}</p>
             <p className="text-sm opacity-80">{session?.user?.email}</p>
-            <span className="mt-1 inline-block rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
-              {session?.user?.role}
+            <span className="mt-1 inline-block rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium uppercase">
+              {messContext?.userRole || "MEMBER"}
             </span>
           </div>
         </div>
@@ -74,10 +79,10 @@ export default function MorePage() {
       </div>
 
       {/* Admin menu items */}
-      {isAdmin && (
+      {canManage && (
         <div>
           <p className="mb-3 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Admin Tools
+            {isMessAdmin ? "Admin Tools" : "Moderator Tools"}
           </p>
           <div className="overflow-hidden rounded-2xl border bg-card">
             {adminItems.map((item, i) => {
@@ -107,6 +112,34 @@ export default function MorePage() {
 
       {/* Sign out */}
       <div className="overflow-hidden rounded-2xl border bg-card">
+        <Link
+          href="/help"
+          className="flex w-full items-center gap-4 p-4 transition-colors hover:bg-muted/50 active:bg-muted border-b"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
+            <BookOpen className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium">Help & Guide</p>
+            <p className="text-sm text-muted-foreground">Learn how to use Mess Ledger</p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
+        
+        <Link
+          href="/select-mess"
+          className="flex w-full items-center gap-4 p-4 transition-colors hover:bg-muted/50 active:bg-muted border-b"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+            <Building2 className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium">Switch Mess</p>
+            <p className="text-sm text-muted-foreground">Change or create a new mess</p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
+        
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex w-full items-center gap-4 p-4 text-destructive transition-colors hover:bg-destructive/5 active:bg-destructive/10"
