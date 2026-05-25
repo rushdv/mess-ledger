@@ -6,6 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Formats a number as Bangladeshi Taka (BDT)
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("bn-BD", {
     style: "currency",
