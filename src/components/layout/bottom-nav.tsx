@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useMessContext } from "@/hooks/use-mess-context";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -23,8 +23,7 @@ const primaryNav = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "ADMIN";
+  const { messContext } = useMessContext();
 
   const items = primaryNav;
 

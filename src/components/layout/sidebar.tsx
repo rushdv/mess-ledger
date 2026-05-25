@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useMessContext } from "@/hooks/use-mess-context";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -14,6 +15,7 @@ import {
   Receipt,
   Share2,
   LogOut,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +34,10 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "ADMIN";
+  const { messContext } = useMessContext();
+  
+  // Use mess-specific role, not global role
+  const canManage = messContext?.canManage ?? false;
 
   return (
     // Hidden on mobile, visible on md+
@@ -48,7 +53,7 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => {
-          if (item.adminOnly && !isAdmin) return null;
+          if (item.adminOnly && !canManage) return null;
           const Icon = item.icon;
           const isActive = pathname === item.href;
           return (
@@ -70,8 +75,17 @@ export function Sidebar() {
       </nav>
 
       {/* User + Logout */}
-      <div className="border-t p-3">
-        <div className="mb-2 flex items-center gap-3 rounded-lg px-3 py-2">
+      <div className="border-t p-3 space-y-2">
+        {/* Switch Mess Button */}
+        <Link
+          href="/select-mess"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <Building2 className="h-4 w-4" />
+          Switch Mess
+        </Link>
+        
+        <div className="flex items-center gap-3 rounded-lg px-3 py-2">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
             {session?.user?.name?.[0]?.toUpperCase() ?? "?"}
           </div>
