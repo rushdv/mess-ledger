@@ -213,52 +213,174 @@ export default function MealsPage() {
         </div>
       </div>
 
-      {/* Monthly grid (compact, read-only overview) */}
+      {/* Monthly overview */}
       {isAdmin && members.length > 0 && (
         <div className="rounded-2xl border bg-card">
           <div className="border-b px-4 py-3">
             <p className="font-semibold">Monthly Overview</p>
-            <p className="text-xs text-muted-foreground">Scroll horizontally to see all days</p>
+            <p className="text-xs text-muted-foreground">Member · day-by-day totals</p>
           </div>
-          <div className="overflow-x-auto p-4">
-            <table className="w-full text-xs">
-              <thead>
-                <tr>
-                  <th className="sticky left-0 bg-card pr-3 text-left font-medium text-muted-foreground">Member</th>
-                  {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => (
-                    <th key={d} className="min-w-[28px] text-center font-medium text-muted-foreground">{d}</th>
+
+          {/* Scrollable table with proper sticky column */}
+          <div className="relative">
+            <div className="overflow-x-auto">
+              <table className="border-collapse text-xs" style={{ tableLayout: "fixed" }}>
+                <colgroup>
+                  {/* Fixed name column */}
+                  <col style={{ width: "72px", minWidth: "72px" }} />
+                  {/* Day columns */}
+                  {Array.from({ length: daysInMonth }, (_, i) => (
+                    <col key={i} style={{ width: "26px", minWidth: "26px" }} />
                   ))}
-                  <th className="pl-2 text-right font-medium text-muted-foreground">∑</th>
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((member) => {
-                  const rowTotal = Array.from({ length: daysInMonth }, (_, i) => i + 1).reduce((sum, d) => {
-                    const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-                    return sum + (mealMap[member.id]?.[dk]?.total ?? 0);
-                  }, 0);
-                  return (
-                    <tr key={member.id} className="border-t">
-                      <td className="sticky left-0 bg-card py-2 pr-3 font-medium">
-                        {member.user.name?.split(" ")[0] ?? member.user.email}
-                      </td>
-                      {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
+                  {/* Total column */}
+                  <col style={{ width: "36px", minWidth: "36px" }} />
+                </colgroup>
+
+                <thead>
+                  <tr className="border-b">
+                    {/* Sticky header name cell */}
+                    <th
+                      className="border-r bg-muted/60 px-2 py-2 text-left font-semibold text-muted-foreground"
+                      style={{ position: "sticky", left: 0, zIndex: 2 }}
+                    >
+                      Name
+                    </th>
+                    {Array.from({ length: daysInMonth }, (_, i) => {
+                      const d = i + 1;
+                      const isToday =
+                        d === new Date().getDate() &&
+                        month === new Date().getMonth() + 1 &&
+                        year === new Date().getFullYear();
+                      return (
+                        <th
+                          key={d}
+                          className={`py-2 text-center font-medium ${
+                            isToday
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {d}
+                        </th>
+                      );
+                    })}
+                    <th
+                      className="border-l bg-muted/60 py-2 text-center font-semibold text-primary"
+                      style={{ position: "sticky", right: 0, zIndex: 2 }}
+                    >
+                      ∑
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {members.map((member, idx) => {
+                    const rowTotal = Array.from({ length: daysInMonth }, (_, i) => i + 1).reduce(
+                      (sum, d) => {
                         const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-                        const val = mealMap[member.id]?.[dk]?.total ?? 0;
-                        return (
-                          <td key={d} className="py-2 text-center">
-                            <span className={val > 0 ? "font-semibold text-primary" : "text-muted-foreground/40"}>
-                              {val > 0 ? val : "·"}
-                            </span>
-                          </td>
-                        );
-                      })}
-                      <td className="py-2 pl-2 text-right font-bold text-primary">{rowTotal}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        return sum + (mealMap[member.id]?.[dk]?.total ?? 0);
+                      },
+                      0
+                    );
+
+                    return (
+                      <tr
+                        key={member.id}
+                        className={idx % 2 === 0 ? "bg-background" : "bg-muted/20"}
+                      >
+                        {/* Sticky name cell */}
+                        <td
+                          className="border-r py-2 pl-2 pr-1 font-medium"
+                          style={{
+                            position: "sticky",
+                            left: 0,
+                            zIndex: 1,
+                            background: idx % 2 === 0 ? "hsl(var(--background))" : "hsl(var(--muted) / 0.2)",
+                          }}
+                        >
+                          <span className="block max-w-[64px] truncate">
+                            {member.user.name?.split(" ")[0] ?? member.user.email.split("@")[0]}
+                          </span>
+                        </td>
+
+                        {/* Day cells */}
+                        {Array.from({ length: daysInMonth }, (_, i) => {
+                          const d = i + 1;
+                          const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+                          const val = mealMap[member.id]?.[dk]?.total ?? 0;
+                          const isToday =
+                            d === new Date().getDate() &&
+                            month === new Date().getMonth() + 1 &&
+                            year === new Date().getFullYear();
+                          return (
+                            <td
+                              key={d}
+                              className={`py-2 text-center ${isToday ? "bg-primary/5" : ""}`}
+                            >
+                              {val > 0 ? (
+                                <span className="font-bold text-primary">{val}</span>
+                              ) : (
+                                <span className="text-muted-foreground/30">·</span>
+                              )}
+                            </td>
+                          );
+                        })}
+
+                        {/* Sticky total cell */}
+                        <td
+                          className="border-l py-2 text-center font-bold text-primary"
+                          style={{
+                            position: "sticky",
+                            right: 0,
+                            zIndex: 1,
+                            background: idx % 2 === 0 ? "hsl(var(--background))" : "hsl(var(--muted) / 0.2)",
+                          }}
+                        >
+                          {rowTotal}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+
+                {/* Footer: column totals */}
+                <tfoot>
+                  <tr className="border-t bg-muted/40">
+                    <td
+                      className="border-r py-2 pl-2 text-xs font-semibold text-muted-foreground"
+                      style={{ position: "sticky", left: 0, zIndex: 1, background: "hsl(var(--muted) / 0.4)" }}
+                    >
+                      Total
+                    </td>
+                    {Array.from({ length: daysInMonth }, (_, i) => {
+                      const d = i + 1;
+                      const dk = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+                      const dayTotal = members.reduce(
+                        (sum, m) => sum + (mealMap[m.id]?.[dk]?.total ?? 0),
+                        0
+                      );
+                      return (
+                        <td key={d} className="py-2 text-center text-xs font-semibold">
+                          {dayTotal > 0 ? (
+                            <span className="text-foreground">{dayTotal}</span>
+                          ) : (
+                            <span className="text-muted-foreground/30">·</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td
+                      className="border-l py-2 text-center text-xs font-bold text-primary"
+                      style={{ position: "sticky", right: 0, zIndex: 1, background: "hsl(var(--muted) / 0.4)" }}
+                    >
+                      {members.reduce((sum, m) => {
+                        return sum + Object.values(mealMap[m.id] ?? {}).reduce((s, mc) => s + mc.total, 0);
+                      }, 0)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
         </div>
       )}
