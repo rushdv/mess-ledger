@@ -17,6 +17,7 @@ interface WelcomeModalProps {
   messName?: string;
 }
 
+// WelcomeModal component provides an onboarding guide for new and joined mess members
 export function WelcomeModal({ isNewMess = false, messName = "your mess" }: WelcomeModalProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
