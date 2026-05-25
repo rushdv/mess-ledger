@@ -345,7 +345,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 👨‍💻 Author
 
-**Your Name**
+**Shihab Shahriar Rashu**
 
 - GitHub: [@rushdv](https://github.com/rushdv)
 - Email: shihab.zn4@gmail.com
