@@ -367,7 +367,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 If you find this project useful, please consider giving it a star! ⭐
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/mess-ledger&type=Date)](https://star-history.com/#yourusername/mess-ledger&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=rushdv/mess-ledger&type=Date)](https://star-history.com/#yourusername/mess-ledger&Date)
 
 ---
 
