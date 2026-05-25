@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -16,13 +16,14 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  role          String    @default("MEMBER") // ADMIN | MEMBER
+  role          String    @default("MEMBER") // ADMIN | MEMBER (deprecated, use MessMember.role)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts  Account[]
-  sessions  Session[]
-  member    Member?
+  accounts    Account[]
+  sessions    Session[]
+  messMembers MessMember[]
+  member      Member[]
 }
 
 model Account {
@@ -63,9 +64,48 @@ model VerificationToken {
 
 // ─── Mess Core ───────────────────────────────────────────────────────────────
 
+// Mess (Tenant/Group) - Each mess is an independent group
+model Mess {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Dhaka Mess", "Student Hostel A"
+  code        String   @unique // Unique invite code (e.g., "DHAKA2024")
+  description String?
+  createdBy   String   // userId of creator
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messMembers     MessMember[]
+  members         Member[]
+  mealCounts      MealCount[]
+  bazarCosts      BazarCost[]
+  utilityCosts    UtilityCost[]
+  sharedCosts     SharedCost[]
+  individualCosts IndividualCost[]
+  payments        Payment[]
+  monthlyReports  MonthlyReport[]
+}
+
+// Junction table: User's membership in different messes
+model MessMember {
+  id        String   @id @default(cuid())
+  userId    String
+  messId    String
+  role      String   @default("MEMBER") // ADMIN | MODERATOR | MEMBER
+  joinedAt  DateTime @default(now())
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mess Mess @relation(fields: [messId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messId])
+}
+
 model Member {
   id        String   @id @default(cuid())
-  userId    String   @unique
+  userId    String
+  messId    String
   phone     String?
   joinedAt  DateTime @default(now())
   isActive  Boolean  @default(true)
@@ -73,16 +113,20 @@ model Member {
   updatedAt DateTime @updatedAt
 
   user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mess            Mess               @relation(fields: [messId], references: [id], onDelete: Cascade)
   mealCounts      MealCount[]
   payments        Payment[]
   individualCosts IndividualCost[]
   sharedCosts     SharedCostMember[]
+
+  @@unique([userId, messId])
 }
 
 // One record per member per day
 model MealCount {
   id        String   @id @default(cuid())
   memberId  String
+  messId    String
   date      DateTime
   breakfast Int      @default(0)
   lunch     Int      @default(0)
@@ -92,6 +136,7 @@ model MealCount {
   updatedAt DateTime @updatedAt
 
   member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  mess   Mess   @relation(fields: [messId], references: [id], onDelete: Cascade)
 
   @@unique([memberId, date])
 }
@@ -99,6 +144,7 @@ model MealCount {
 // Monthly bazar (grocery) cost entries
 model BazarCost {
   id          String   @id @default(cuid())
+  messId      String
   month       Int      // 1-12
   year        Int
   amount      Float
@@ -107,32 +153,41 @@ model BazarCost {
   addedBy     String   // userId
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  mess Mess @relation(fields: [messId], references: [id], onDelete: Cascade)
 }
 
 // Monthly utility costs (electricity, gas, water, etc.)
 model UtilityCost {
   id          String   @id @default(cuid())
+  messId      String
   month       Int
   year        Int
   type        String   // ELECTRICITY | GAS | WATER | INTERNET | OTHER
   amount      Float
   description String?
+  date        DateTime @default(now()) // Date of the utility bill
   addedBy     String   // userId
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  mess Mess @relation(fields: [messId], references: [id], onDelete: Cascade)
 }
 
 // Shared costs split among selected members only
 model SharedCost {
   id          String   @id @default(cuid())
+  messId      String
   month       Int
   year        Int
   amount      Float
   description String?
+  date        DateTime @default(now()) // Date of the shared cost
   addedBy     String   // userId
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  mess    Mess               @relation(fields: [messId], references: [id], onDelete: Cascade)
   members SharedCostMember[]
 }
 
@@ -152,35 +207,42 @@ model SharedCostMember {
 model IndividualCost {
   id          String   @id @default(cuid())
   memberId    String
+  messId      String
   month       Int
   year        Int
   amount      Float
   description String?
+  date        DateTime @default(now()) // Date of the individual cost
   addedBy     String   // userId
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  mess   Mess   @relation(fields: [messId], references: [id], onDelete: Cascade)
 }
 
 // Member payments (deposits)
 model Payment {
   id        String   @id @default(cuid())
   memberId  String
+  messId    String
   month     Int
   year      Int
   amount    Float
   note      String?
+  date      DateTime @default(now()) // Date of payment
   addedBy   String   // userId
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  mess   Mess   @relation(fields: [messId], references: [id], onDelete: Cascade)
 }
 
 // Cached monthly calculation result (recalculated on demand)
 model MonthlyReport {
   id              String   @id @default(cuid())
+  messId          String
   month           Int
   year            Int
   totalMeals      Int
@@ -191,9 +253,10 @@ model MonthlyReport {
   utilityPerHead  Float    // totalUtility / activeMembers
   calculatedAt    DateTime @default(now())
 
+  mess            Mess                   @relation(fields: [messId], references: [id], onDelete: Cascade)
   memberSummaries MemberMonthlySummary[]
 
-  @@unique([month, year])
+  @@unique([messId, month, year])
 }
 
 model MemberMonthlySummary {
