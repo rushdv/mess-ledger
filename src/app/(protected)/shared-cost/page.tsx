@@ -33,7 +33,12 @@ export default function SharedCostPage() {
   const [entries, setEntries] = useState<SharedCostEntry[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ amount: "", description: "", memberIds: [] as string[] });
+  const [form, setForm] = useState({ 
+    amount: "", 
+    description: "", 
+    memberIds: [] as string[],
+    date: new Date().toISOString().split('T')[0]
+  });
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -79,10 +84,16 @@ export default function SharedCostPage() {
         amount: parseFloat(form.amount),
         description: form.description || null,
         memberIds: form.memberIds,
+        date: form.date,
       }),
     });
     if (res.ok) {
-      setForm({ amount: "", description: "", memberIds: [] });
+      setForm({ 
+        amount: "", 
+        description: "", 
+        memberIds: [],
+        date: new Date().toISOString().split('T')[0]
+      });
       setOpen(false);
       fetchData();
     }
@@ -108,6 +119,17 @@ export default function SharedCostPage() {
           <DialogTitle>Add Shared Cost</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="sc-date">Date</Label>
+            <Input 
+              id="sc-date" 
+              type="date" 
+              value={form.date} 
+              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
+              required 
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="sc-amount">Amount (৳)</Label>
             <Input
