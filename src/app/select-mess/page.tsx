@@ -340,6 +340,7 @@ export default function SelectMessPage() {
           )}
         </div>
       </div>
+    </div>
     </>
   );
 }
