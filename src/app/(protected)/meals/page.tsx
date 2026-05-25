@@ -62,9 +62,7 @@ export default function MealsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const visibleMembers = isAdmin
-    ? members
-    : members.filter((m) => m.user.email === session?.user?.email);
+  const visibleMembers = members;
 
   // Sync entries on day/data change
   useEffect(() => {
@@ -310,10 +308,10 @@ export default function MealsPage() {
         </div>
 
         {/* Two-column layout */}
-        <div className="grid grid-cols-3 gap-6 items-start">
+        <div className={`grid gap-6 items-start ${isAdmin ? 'grid-cols-3' : 'grid-cols-1'}`}>
 
-          {/* Left col (2/3): monthly overview table */}
-          <div className="col-span-2 rounded-xl border bg-card">
+          {/* Left col (2/3 or full): monthly overview table */}
+          <div className={`${isAdmin ? 'col-span-2' : 'col-span-1'} rounded-xl border bg-card`}>
             <div className="border-b px-5 py-4 flex items-center justify-between">
               <div>
                 <h2 className="font-semibold">Monthly Overview</h2>
@@ -336,31 +334,33 @@ export default function MealsPage() {
           </div>
 
           {/* Right col (1/3): day entry panel */}
-          <div className="rounded-xl border bg-card">
-            <div className="border-b px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-semibold">Day {selectedDay} Entry</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Breakfast · Lunch · Dinner</p>
+          {isAdmin && (
+            <div className="rounded-xl border bg-card">
+              <div className="border-b px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-semibold">Day {selectedDay} Entry</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Breakfast · Lunch · Dinner</p>
+                  </div>
+                  {message && <span className="text-sm font-medium text-green-600">{message}</span>}
                 </div>
-                {message && <span className="text-sm font-medium text-green-600">{message}</span>}
+                {/* Compact day strip */}
+                <div className="mt-3">{DayStrip}</div>
               </div>
-              {/* Compact day strip */}
-              <div className="mt-3">{DayStrip}</div>
-            </div>
 
-            {MemberInputs}
+              {MemberInputs}
 
-            <div className="border-t p-4">
-              <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !isAdmin}>
-                <Save className="mr-2 h-4 w-4" />
-                {saving ? "Saving..." : `Save Day ${selectedDay}`}
-              </Button>
-              {!isAdmin && (
-                <p className="mt-2 text-center text-xs text-muted-foreground">Only admin can add meals</p>
-              )}
+              <div className="border-t p-4">
+                <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !isAdmin}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving ? "Saving..." : `Save Day ${selectedDay}`}
+                </Button>
+                {!isAdmin && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">Only admin can add meals</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -386,28 +386,30 @@ export default function MealsPage() {
         )}
 
         {/* Day entry card */}
-        <div className="rounded-2xl border bg-card">
-          <div className="border-b px-4 py-3">
-            <div className="flex items-center justify-between">
-              <p className="font-semibold">Daily Entry</p>
-              {message && <span className="text-sm font-medium text-green-600">{message}</span>}
+        {isAdmin && (
+          <div className="rounded-2xl border bg-card">
+            <div className="border-b px-4 py-3">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">Daily Entry</p>
+                {message && <span className="text-sm font-medium text-green-600">{message}</span>}
+              </div>
+              <div className="mt-3">{DayStrip}</div>
             </div>
-            <div className="mt-3">{DayStrip}</div>
+            {MemberInputs}
+            <div className="border-t p-4">
+              <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !isAdmin}>
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? "Saving..." : `Save Day ${selectedDay}`}
+              </Button>
+              {!isAdmin && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">Only admin can add meals</p>
+              )}
+            </div>
           </div>
-          {MemberInputs}
-          <div className="border-t p-4">
-            <Button className="w-full rounded-xl" onClick={handleSaveAll} disabled={saving || !isAdmin}>
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? "Saving..." : `Save Day ${selectedDay}`}
-            </Button>
-            {!isAdmin && (
-              <p className="mt-2 text-center text-xs text-muted-foreground">Only admin can add meals</p>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Monthly overview */}
-        {isAdmin && members.length > 0 && (
+        {members.length > 0 && (
           <div className="rounded-2xl border bg-card">
             <div className="border-b px-4 py-3">
               <p className="font-semibold">Monthly Overview</p>

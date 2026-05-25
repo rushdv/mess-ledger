@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/meals", label: "Meal Count", icon: UtensilsCrossed },
-  { href: "/bazar", label: "Bazar Cost", icon: ShoppingBasket, adminOnly: true },
+  { href: "/bazar", label: "Bazar Cost", icon: ShoppingBasket },
   { href: "/utility", label: "Utility", icon: Zap, adminOnly: true },
   { href: "/individual-cost", label: "Individual Cost", icon: Receipt, adminOnly: true },
   { href: "/shared-cost", label: "Shared Cost", icon: Share2, adminOnly: true },

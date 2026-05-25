@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 const primaryNav = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/meals", label: "Meals", icon: UtensilsCrossed },
-  { href: "/bazar", label: "Bazar", icon: ShoppingBasket, adminOnly: true },
+  { href: "/bazar", label: "Bazar", icon: ShoppingBasket },
   { href: "/report", label: "Report", icon: BarChart3 },
   { href: "/more", label: "More", icon: MoreHorizontal },
 ];
@@ -26,7 +26,7 @@ export function BottomNav() {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "ADMIN";
 
-  const items = primaryNav.filter((item) => !item.adminOnly || isAdmin);
+  const items = primaryNav;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden">
