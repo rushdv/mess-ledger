@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useMessContext } from "@/hooks/use-mess-context";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, getMonthName } from "@/lib/utils";
-import { RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
+import { exportReportToPDF } from "@/lib/pdf-export";
+import { RefreshCw, TrendingUp, TrendingDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -41,7 +43,9 @@ interface ReportData {
 
 export default function ReportPage() {
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "ADMIN";
+  const { messContext } = useMessContext();
+  const canManage = messContext?.canManage ?? false;
+  const messName = messContext?.messName || "Mess";
 
   const { month: initMonth, year: initYear } = getCurrentMonthYear();
   const [month, setMonth] = useState(initMonth);
@@ -70,6 +74,12 @@ export default function ReportPage() {
     setRecalculating(false);
   }
 
+  function handleExportPDF() {
+    if (report) {
+      exportReportToPDF(report, messName);
+    }
+  }
+
   const chartData = report?.memberSummaries.map((s) => ({
     name: s.memberName.split(" ")[0],
     "Meal": Math.round(s.mealCost),
@@ -94,7 +104,11 @@ export default function ReportPage() {
           </div>
           <div className="flex items-center gap-3">
             <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
-            {isAdmin && (
+            <Button variant="outline" className="rounded-xl" onClick={handleExportPDF} disabled={!report}>
+              <Download className="mr-1.5 h-4 w-4" />
+              Export PDF
+            </Button>
+            {canManage && (
               <Button variant="outline" className="rounded-xl" onClick={handleRecalculate} disabled={recalculating}>
                 <RefreshCw className={`mr-1.5 h-4 w-4 ${recalculating ? "animate-spin" : ""}`} />
                 Recalculate
@@ -229,14 +243,18 @@ export default function ReportPage() {
       {/* ── MOBILE layout ── */}
       <div className="space-y-5 md:hidden">
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
-            {isAdmin && (
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={handleRecalculate} disabled={recalculating}>
-                <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${recalculating ? "animate-spin" : ""}`} />
-                Recalc
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={handleExportPDF} disabled={!report}>
+                <Download className="h-3.5 w-3.5" />
               </Button>
-            )}
+              {canManage && (
+                <Button variant="outline" size="sm" className="rounded-xl" onClick={handleRecalculate} disabled={recalculating}>
+                  <RefreshCw className={`h-3.5 w-3.5 ${recalculating ? "animate-spin" : ""}`} />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 

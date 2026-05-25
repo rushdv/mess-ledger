@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getMessContext } from "@/lib/mess-context";
 import { calculateMonthly } from "@/lib/calculations";
 import { formatCurrency, getMonthName } from "@/lib/utils";
 import {
@@ -9,16 +10,26 @@ import {
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
+  const messContext = await getMessContext();
+  if (!messContext) return null;
+
   const now = new Date();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
 
   const [calc, memberCount] = await Promise.all([
-    calculateMonthly(month, year),
-    prisma.member.count({ where: { isActive: true } }),
+    calculateMonthly(month, year, messContext.messId),
+    prisma.member.count({ where: { isActive: true, messId: messContext.messId } }),
   ]);
 
-  const member = await prisma.member.findUnique({ where: { userId: session!.user.id } });
+  const member = await prisma.member.findUnique({ 
+    where: { 
+      userId_messId: { 
+        userId: session!.user.id,
+        messId: messContext.messId 
+      } 
+    } 
+  });
   const mySummary = member ? calc.memberSummaries.find((s) => s.memberId === member.id) : null;
 
   return (
