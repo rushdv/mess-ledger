@@ -332,7 +332,7 @@ Contributions are welcome! Here's how you can help:
 
 Found a bug or have a feature request? Please open an issue on GitHub:
 
-- 🐛 [Report a Bug](https://github.com/yourusername/mess-ledger/issues/new?labels=bug)
+- 🐛 [Report a Bug](https://github.com/rushdv/mess-ledger/issues/new?labels=bug)
 - ✨ [Request a Feature](https://github.com/yourusername/mess-ledger/issues/new?labels=enhancement)
 
 ---
