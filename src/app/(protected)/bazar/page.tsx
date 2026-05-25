@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useMessContext } from "@/hooks/use-mess-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,8 +27,12 @@ export default function BazarPage() {
   const [year, setYear] = useState(initYear);
   const [entries, setEntries] = useState<BazarEntry[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ amount: "", description: "" });
+  const [form, setForm] = useState({ amount: "", description: "", date: new Date().toISOString().split('T')[0] });
   const [loading, setLoading] = useState(false);
+  const { messContext } = useMessContext();
+  
+  // Check if user can manage (admin or moderator)
+  const canManage = messContext?.canManage ?? false;
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch(`/api/bazar?month=${month}&year=${year}`);
@@ -44,9 +49,19 @@ export default function BazarPage() {
     const res = await fetch("/api/bazar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ month, year, amount: parseFloat(form.amount), description: form.description || null }),
+      body: JSON.stringify({ 
+        month, 
+        year, 
+        amount: parseFloat(form.amount), 
+        description: form.description || null,
+        date: form.date // Send the selected date
+      }),
     });
-    if (res.ok) { setForm({ amount: "", description: "" }); setOpen(false); fetchEntries(); }
+    if (res.ok) { 
+      setForm({ amount: "", description: "", date: new Date().toISOString().split('T')[0] }); 
+      setOpen(false); 
+      fetchEntries(); 
+    }
     setLoading(false);
   }
 
@@ -67,6 +82,17 @@ export default function BazarPage() {
       <DialogContent className="mx-4 rounded-2xl sm:mx-auto">
         <DialogHeader><DialogTitle>Add Bazar Entry</DialogTitle></DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input 
+              id="date" 
+              type="date" 
+              value={form.date} 
+              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
+              required 
+              max={new Date().toISOString().split('T')[0]} // Cannot select future dates
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (৳)</Label>
             <Input id="amount" type="number" step="0.01" min="0" placeholder="0.00"
@@ -99,13 +125,15 @@ export default function BazarPage() {
               <p className="text-xs text-muted-foreground">{formatDate(entry.date)}</p>
             </div>
           </div>
-          <button
-            onClick={() => handleDelete(entry.id)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400 active:bg-red-100 dark:active:bg-red-900"
-            aria-label="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {canManage && (
+            <button
+              onClick={() => handleDelete(entry.id)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400 active:bg-red-100 dark:active:bg-red-900"
+              aria-label="Delete"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ))}
     </div>
@@ -122,7 +150,7 @@ export default function BazarPage() {
           </div>
           <div className="flex items-center gap-3">
             <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
-            {AddDialog}
+            {canManage && AddDialog}
           </div>
         </div>
 
@@ -175,7 +203,7 @@ export default function BazarPage() {
       <div className="space-y-5 md:hidden">
         <div className="flex flex-col gap-3">
           <MonthPicker month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
-          {AddDialog}
+          {canManage && AddDialog}
         </div>
 
         <div className="rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-5 text-white">
