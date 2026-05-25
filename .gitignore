@@ -48,3 +48,5 @@ prisma/*.backup-*
 *_UPDATES.md
 fix-*.sh
 make_commits.py
+prisma-provider-switch.js
+.env.production.local
