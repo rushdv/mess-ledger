@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getMessContext } from "@/lib/mess-context";
 import { Sidebar } from "@/components/layout/sidebar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { TopBar } from "@/components/layout/top-bar";
@@ -13,6 +14,12 @@ export default async function ProtectedLayout({
   const session = await getServerSession(authOptions);
   if (!session) {
     redirect("/login");
+  }
+
+  // Check if user has selected a mess
+  const messContext = await getMessContext();
+  if (!messContext) {
+    redirect("/select-mess");
   }
 
   return (
