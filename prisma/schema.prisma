@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -205,7 +205,8 @@ model MemberMonthlySummary {
   mealCost       Float  // meals × mealRate
   utilityShare   Float
   individualCost Float  @default(0) // personal/individual charges
-  totalCost      Float  // mealCost + utilityShare + individualCost
+  sharedCost     Float  @default(0) // shared costs split among selected members
+  totalCost      Float  // mealCost + utilityShare + individualCost + sharedCost
   totalPaid      Float
   due            Float  // totalCost - totalPaid (positive = owes, negative = advance)
 
