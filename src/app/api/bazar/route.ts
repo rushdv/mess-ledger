@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
+import { BazarPostSchema, zodFirstError } from "@/lib/validation";
 
 // GET /api/bazar?month=5&year=2026
 export async function GET(req: NextRequest) {
@@ -44,17 +45,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
-  const { month, year, amount, description, date } = body;
-
-  if (!month || !year || !amount) {
-    return NextResponse.json(
-      { error: "month, year, and amount are required" },
-      { status: 400 }
-    );
+  const raw = await req.json();
+  const parsed = BazarPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: zodFirstError(parsed) }, { status: 400 });
   }
 
-  // Use provided date or default to now
+  const { month, year, amount, description, date } = parsed.data;
   const entryDate = date ? new Date(date) : new Date();
 
   const entry = await prisma.bazarCost.create({
@@ -62,7 +59,7 @@ export async function POST(req: NextRequest) {
       messId: messContext.messId,
       month,
       year,
-      amount: parseFloat(amount),
+      amount,
       description: description ?? null,
       date: entryDate,
       addedBy: session.user.id,

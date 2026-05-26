@@ -35,12 +35,15 @@ export default function IndividualCostPage() {
   const [entries, setEntries] = useState<IndividualCostEntry[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
   const [form, setForm] = useState({ 
     memberId: "", 
     amount: "", 
     description: "",
     date: new Date().toISOString().split('T')[0]
   });
+  const [bulkEntries, setBulkEntries] = useState<{ [memberId: string]: { amount: string; description: string } }>({});
+  const [bulkDescription, setBulkDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -93,6 +96,50 @@ export default function IndividualCostPage() {
     setLoading(false);
   }
 
+  async function handleBulkAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+
+    const postEntries = Object.entries(bulkEntries)
+      .map(([memberId, data]) => ({
+        memberId,
+        amount: parseFloat(data.amount) || 0,
+        description: data.description || ""
+      }))
+      .filter((entry) => entry.amount > 0);
+
+    if (postEntries.length === 0) {
+      alert("Please enter at least one amount greater than zero.");
+      setLoading(false);
+      return;
+    }
+
+    const res = await fetch("/api/individual-cost", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bulk: true,
+        month,
+        year,
+        date: form.date,
+        description: bulkDescription || null,
+        entries: postEntries
+      }),
+    });
+
+    if (res.ok) {
+      setBulkEntries({});
+      setBulkDescription("");
+      setForm((p) => ({ ...p, date: new Date().toISOString().split('T')[0] }));
+      setOpen(false);
+      fetchData();
+    } else {
+      const err = await res.json();
+      alert(err.error || "Failed to add entries.");
+    }
+    setLoading(false);
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("Delete this entry?")) return;
     await fetch(`/api/individual-cost?id=${id}`, { method: "DELETE" });
@@ -100,77 +147,203 @@ export default function IndividualCostPage() {
   }
 
   const AddDialog = (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => {
+      setOpen(v);
+      if (!v) {
+        setActiveTab("single");
+        setBulkEntries({});
+        setBulkDescription("");
+      }
+    }}>
       <DialogTrigger asChild>
         <Button className="rounded-xl">
           <Plus className="mr-1.5 h-4 w-4" />
           Add Cost
         </Button>
       </DialogTrigger>
-      <DialogContent className="mx-4 rounded-2xl sm:mx-auto">
+      <DialogContent className={`mx-4 rounded-2xl sm:mx-auto transition-all duration-200 ${activeTab === "bulk" ? "sm:max-w-2xl" : "sm:max-w-[450px]"}`}>
         <DialogHeader>
           <DialogTitle>Add Individual Cost</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleAdd} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="ic-date">Date</Label>
-            <Input 
-              id="ic-date" 
-              type="date" 
-              value={form.date} 
-              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
-              required 
-              max={new Date().toISOString().split('T')[0]}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Member</Label>
-            <Select
-              value={form.memberId}
-              onValueChange={(v) => setForm((p) => ({ ...p, memberId: v }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select member" />
-              </SelectTrigger>
-              <SelectContent>
-                {members.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.user.name ?? m.user.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ic-amount">Amount (৳)</Label>
-            <Input
-              id="ic-amount"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={form.amount}
-              onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ic-desc">Description (optional)</Label>
-            <Input
-              id="ic-desc"
-              placeholder="e.g. Personal grocery, medicine"
-              value={form.description}
-              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full rounded-xl"
-            disabled={loading || !form.memberId}
+
+        {/* Custom Tab Switcher */}
+        <div className="flex rounded-xl bg-muted p-1 border">
+          <button
+            type="button"
+            className={`flex-1 rounded-lg py-1.5 text-sm font-medium transition-all ${
+              activeTab === "single"
+                ? "bg-background text-foreground shadow-sm font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setActiveTab("single")}
           >
-            {loading ? "Adding..." : "Add Cost"}
-          </Button>
-        </form>
+            Single Entry
+          </button>
+          <button
+            type="button"
+            className={`flex-1 rounded-lg py-1.5 text-sm font-medium transition-all ${
+              activeTab === "bulk"
+                ? "bg-background text-foreground shadow-sm font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setActiveTab("bulk")}
+          >
+            Bulk Entry
+          </button>
+        </div>
+
+        {activeTab === "single" ? (
+          <form onSubmit={handleAdd} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ic-date">Date</Label>
+              <Input 
+                id="ic-date" 
+                type="date" 
+                value={form.date} 
+                onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
+                required 
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Member</Label>
+              <Select
+                value={form.memberId}
+                onValueChange={(v) => setForm((p) => ({ ...p, memberId: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {members.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.user.name ?? m.user.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ic-amount">Amount (৳)</Label>
+              <Input
+                id="ic-amount"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={form.amount}
+                onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ic-desc">Description (optional)</Label>
+              <Input
+                id="ic-desc"
+                placeholder="e.g. Personal grocery, medicine"
+                value={form.description}
+                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full rounded-xl"
+              disabled={loading || !form.memberId}
+            >
+              {loading ? "Adding..." : "Add Cost"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleBulkAdd} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="ic-bulk-date">Date</Label>
+                <Input 
+                  id="ic-bulk-date" 
+                  type="date" 
+                  value={form.date} 
+                  onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
+                  required 
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ic-bulk-desc">Default Note (optional)</Label>
+                <Input
+                  id="ic-bulk-desc"
+                  placeholder="e.g. Personal grocery"
+                  value={bulkDescription}
+                  onChange={(e) => setBulkDescription(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="border rounded-xl p-2 bg-muted/30">
+              <div className="flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b bg-muted/50 rounded-t-lg">
+                <span className="w-1/3">Member</span>
+                <span className="w-24 text-right pr-2">Amount (৳)</span>
+                <span className="flex-1 pl-4">Custom Note</span>
+              </div>
+              <div className="max-h-[250px] overflow-y-auto divide-y pr-1">
+                {members.map((m) => (
+                  <div key={m.id} className="flex items-center gap-3 py-2 px-2 hover:bg-muted/10">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-950 text-xs font-bold text-rose-600 dark:text-rose-400">
+                      {(m.user.name ?? m.user.email)[0]?.toUpperCase()}
+                    </div>
+                    <div className="w-1/3 truncate text-sm font-medium">
+                      {m.user.name ?? m.user.email}
+                    </div>
+                    <div className="w-24 shrink-0">
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        step="0.01"
+                        min="0"
+                        value={bulkEntries[m.id]?.amount ?? ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setBulkEntries((prev) => ({
+                            ...prev,
+                            [m.id]: {
+                              amount: val,
+                              description: prev[m.id]?.description ?? ""
+                            }
+                          }));
+                        }}
+                        className="h-8 px-2 text-sm text-right font-medium"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Custom note"
+                        value={bulkEntries[m.id]?.description ?? ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setBulkEntries((prev) => ({
+                            ...prev,
+                            [m.id]: {
+                              amount: prev[m.id]?.amount ?? "",
+                              description: val
+                            }
+                          }));
+                        }}
+                        className="h-8 px-2 text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full rounded-xl mt-2"
+              disabled={loading || Object.values(bulkEntries).filter(e => parseFloat(e.amount) > 0).length === 0}
+            >
+              {loading ? "Adding All..." : "Submit All Entries"}
+            </Button>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

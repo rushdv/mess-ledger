@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
+import { MealPostSchema, zodFirstError } from "@/lib/validation";
 
 // GET /api/meals?month=5&year=2026
 export async function GET(req: NextRequest) {
@@ -51,15 +52,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No mess selected" }, { status: 400 });
   }
 
-  const body = await req.json();
-  const { memberId, date, breakfast = 0, lunch = 0, dinner = 0 } = body;
-
-  if (!memberId || !date) {
-    return NextResponse.json(
-      { error: "memberId and date are required" },
-      { status: 400 }
-    );
+  const raw = await req.json();
+  const parsed = MealPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: zodFirstError(parsed) }, { status: 400 });
   }
+
+  const { memberId, date, breakfast, lunch, dinner } = parsed.data;
 
   // Members can only update their own meals; admins/moderators can update anyone's
   if (!messContext.canManage) {
@@ -72,8 +71,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const parsedDate = new Date(date);
-  parsedDate.setHours(0, 0, 0, 0);
+  // Normalize to midnight UTC — avoids timezone shifts between dev (UTC+6) and Vercel (UTC)
+  const rawDate = new Date(date);
+  const parsedDate = new Date(Date.UTC(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate()));
 
   const total = breakfast + lunch + dinner;
 

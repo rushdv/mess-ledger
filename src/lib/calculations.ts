@@ -34,18 +34,33 @@ export async function calculateMonthly(
   year: number,
   messId: string
 ): Promise<MonthlyCalculation> {
-  // Get all active members for this mess
+  // Get meal date range first
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59));
+
+  // Fetch all active members PLUS any currently-inactive members who had
+  // activity in this month (meals, payments, or individual costs).
+  // This prevents report imbalances when a member is deactivated mid-month.
   const members = await prisma.member.findMany({
-    where: { 
-      isActive: true,
+    where: {
       messId: messId,
+      OR: [
+        { isActive: true },
+        {
+          mealCounts: {
+            some: { date: { gte: startDate, lte: endDate } },
+          },
+        },
+        {
+          payments: { some: { month, year } },
+        },
+        {
+          individualCosts: { some: { month, year } },
+        },
+      ],
     },
     include: { user: true },
   });
-
-  // Get meal counts for the month
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59);
 
   const mealCounts = await prisma.mealCount.findMany({
     where: {

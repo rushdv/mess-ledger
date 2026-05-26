@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
+import { PaymentPostSchema, zodFirstError } from "@/lib/validation";
 
 // GET /api/payments?month=5&year=2026
 export async function GET(req: NextRequest) {
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(payments);
 }
 
-// POST /api/payments — record a payment (admin only)
+// POST /api/payments — record a payment (single or bulk, admin only)
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -49,26 +50,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
-  const { memberId, month, year, amount, note, date } = body;
-
-  if (!memberId || !month || !year || !amount) {
-    return NextResponse.json(
-      { error: "memberId, month, year, and amount are required" },
-      { status: 400 }
-    );
+  const raw = await req.json();
+  const parsed = PaymentPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: zodFirstError(parsed) }, { status: 400 });
   }
 
-  const paymentDate = date ? new Date(date) : new Date();
+  const data = parsed.data;
+
+  // ── Bulk payment entry ──
+  if (data.bulk === true) {
+    const paymentDate = data.date ? new Date(data.date) : new Date();
+
+    const created = await prisma.$transaction(
+      data.entries.map((e) =>
+        prisma.payment.create({
+          data: {
+            memberId: e.memberId,
+            messId: messContext.messId,
+            month: data.month,
+            year: data.year,
+            amount: e.amount,
+            note: e.note || data.note || null,
+            date: paymentDate,
+            addedBy: session.user.id,
+          },
+        })
+      )
+    );
+
+    return NextResponse.json({ success: true, count: created.length }, { status: 201 });
+  }
+
+  // ── Single payment entry ──
+  const paymentDate = data.date ? new Date(data.date) : new Date();
 
   const payment = await prisma.payment.create({
     data: {
-      memberId,
+      memberId: data.memberId,
       messId: messContext.messId,
-      month,
-      year,
-      amount: parseFloat(amount),
-      note: note ?? null,
+      month: data.month,
+      year: data.year,
+      amount: data.amount,
+      note: data.note ?? null,
       date: paymentDate,
       addedBy: session.user.id,
     },

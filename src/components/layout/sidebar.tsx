@@ -16,6 +16,7 @@ import {
   Share2,
   LogOut,
   Building2,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ const navItems = [
   { href: "/payments", label: "Payments", icon: CreditCard, adminOnly: true },
   { href: "/report", label: "Report", icon: BarChart3 },
   { href: "/members", label: "Members", icon: Users, adminOnly: true },
+  { href: "/help", label: "Help & Guide", icon: BookOpen },
 ];
 
 export function Sidebar() {

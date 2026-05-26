@@ -87,13 +87,17 @@
 
 <div align="center">
 
-| Dashboard | Meals Tracking |
-|-----------|----------------|
-| ![Dashboard](https://via.placeholder.com/400x250?text=Dashboard) | ![Meals](https://via.placeholder.com/400x250?text=Meals+Tracking) |
+| 📊 Dashboard (Desktop) | 📈 Monthly Report (Desktop) |
+|-----------------------|----------------------------|
+| ![Dashboard Desktop](./public/dashboard-desktop.png) | ![Report Desktop](./public/report-desktop.png) |
 
-| Report View | Mobile View |
-|-------------|-------------|
-| ![Report](https://via.placeholder.com/400x250?text=Monthly+Report) | ![Mobile](https://via.placeholder.com/400x250?text=Mobile+Responsive) |
+| 📱 Dashboard (Mobile) | 🍽️ Meals Entry (Mobile) |
+|---------------------|------------------------|
+| ![Dashboard Mobile](./public/dashboard-mobile.png) | ![Meals Mobile](./public/meals-mobile.png) |
+
+| 📊 Monthly Report (Mobile) | ⚙️ More & Settings (Mobile) |
+|---------------------------|----------------------------|
+| ![Report Mobile](./public/report-mobile.png) | ![More Mobile](./public/more-mobile.png) |
 
 </div>
 

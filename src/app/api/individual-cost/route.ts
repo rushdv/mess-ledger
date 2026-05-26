@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
+import { IndividualCostPostSchema, zodFirstError } from "@/lib/validation";
 
 // GET /api/individual-cost?month=5&year=2026
 export async function GET(req: NextRequest) {
@@ -49,26 +50,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
-  const { memberId, month, year, amount, description, date } = body;
-
-  if (!memberId || !month || !year || !amount) {
-    return NextResponse.json(
-      { error: "memberId, month, year, and amount are required" },
-      { status: 400 }
-    );
+  const raw = await req.json();
+  const parsed = IndividualCostPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: zodFirstError(parsed) }, { status: 400 });
   }
 
-  const entryDate = date ? new Date(date) : new Date();
+  const data = parsed.data;
 
+  if (data.bulk === true) {
+    const entryDate = data.date ? new Date(data.date) : new Date();
+    const createdEntries = await prisma.$transaction(
+      data.entries.map((e) =>
+        prisma.individualCost.create({
+          data: {
+            memberId: e.memberId,
+            messId: messContext.messId,
+            month: data.month,
+            year: data.year,
+            amount: e.amount,
+            description: e.description || data.description || null,
+            date: entryDate,
+            addedBy: session.user.id,
+          },
+        })
+      )
+    );
+    return NextResponse.json({ success: true, count: createdEntries.length }, { status: 201 });
+  }
+
+  // Single entry
+  const entryDate = data.date ? new Date(data.date) : new Date();
   const entry = await prisma.individualCost.create({
     data: {
-      memberId,
+      memberId: data.memberId,
       messId: messContext.messId,
-      month,
-      year,
-      amount: parseFloat(amount),
-      description: description ?? null,
+      month: data.month,
+      year: data.year,
+      amount: data.amount,
+      description: data.description ?? null,
       date: entryDate,
       addedBy: session.user.id,
     },
