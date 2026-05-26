@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getMonthName } from "./utils";
+import { notoBengaliBase64 } from "@/lib/fonts/noto-sans-bengali";
 
 // Helper function to format currency without special symbols
 function formatCurrencyForPDF(amount: number): string {
@@ -39,9 +40,13 @@ interface ReportData {
 export function exportReportToPDF(report: ReportData, messName: string) {
   const doc = new jsPDF();
   
+  // Register Noto Sans Bengali font to support Bangla Unicode characters
+  doc.addFileToVFS("NotoSansBengali.ttf", notoBengaliBase64);
+  doc.addFont("NotoSansBengali.ttf", "NotoSansBengali", "normal");
+  doc.setFont("NotoSansBengali");
+  
   // Title
   doc.setFontSize(20);
-  doc.setFont("helvetica", "bold");
   doc.text(`${messName}`, 105, 15, { align: "center" });
   
   doc.setFontSize(16);
@@ -49,10 +54,8 @@ export function exportReportToPDF(report: ReportData, messName: string) {
   
   // Summary Section
   doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
   doc.text("Summary", 14, 35);
   
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   
   const summaryData = [
@@ -72,8 +75,8 @@ export function exportReportToPDF(report: ReportData, messName: string) {
     head: [["Item", "Amount"]],
     body: summaryData,
     theme: "grid",
-    headStyles: { fillColor: [59, 130, 246], fontSize: 10 },
-    styles: { fontSize: 9 },
+    headStyles: { font: "NotoSansBengali", fillColor: [59, 130, 246], fontSize: 10 },
+    styles: { font: "NotoSansBengali", fontSize: 9 },
     columnStyles: {
       0: { cellWidth: 80 },
       1: { cellWidth: 60, halign: "right" },
@@ -84,7 +87,6 @@ export function exportReportToPDF(report: ReportData, messName: string) {
   const finalY = (doc as any).lastAutoTable.finalY || 40;
   
   doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
   doc.text("Member Summary", 14, finalY + 10);
   
   const memberData = report.memberSummaries.map((s) => [
@@ -119,8 +121,8 @@ export function exportReportToPDF(report: ReportData, messName: string) {
     head: [["Member", "Meals", "Meal Cost", "Utility", "Individual", "Shared", "Total", "Paid", "Due", "Status"]],
     body: memberData,
     theme: "striped",
-    headStyles: { fillColor: [59, 130, 246], fontSize: 8 },
-    styles: { fontSize: 7 },
+    headStyles: { font: "NotoSansBengali", fillColor: [59, 130, 246], fontSize: 8 },
+    styles: { font: "NotoSansBengali", fontSize: 7 },
     columnStyles: {
       0: { cellWidth: 30 },
       1: { cellWidth: 15, halign: "right" },
@@ -156,7 +158,6 @@ export function exportReportToPDF(report: ReportData, messName: string) {
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
     doc.text(
       `Generated on ${new Date().toLocaleDateString()} | Page ${i} of ${pageCount}`,
       105,

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -83,6 +83,9 @@ model Mess {
   individualCosts IndividualCost[]
   payments        Payment[]
   monthlyReports  MonthlyReport[]
+  paymentRequests PaymentRequest[]
+  expenseRequests ExpenseRequest[]
+  notices         Notice[]
 }
 
 // Junction table: User's membership in different messes
@@ -106,11 +109,14 @@ model Member {
   id        String   @id @default(cuid())
   userId    String
   messId    String
-  phone     String?
-  joinedAt  DateTime @default(now())
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  phone            String?
+  defaultBreakfast Int      @default(0)
+  defaultLunch     Int      @default(0)
+  defaultDinner    Int      @default(0)
+  joinedAt         DateTime @default(now())
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   mess            Mess               @relation(fields: [messId], references: [id], onDelete: Cascade)
@@ -118,6 +124,8 @@ model Member {
   payments        Payment[]
   individualCosts IndividualCost[]
   sharedCosts     SharedCostMember[]
+  paymentRequests PaymentRequest[]
+  expenseRequests ExpenseRequest[]
 
   @@unique([userId, messId])
 }
@@ -274,4 +282,48 @@ model MemberMonthlySummary {
   due            Float  // totalCost - totalPaid (positive = owes, negative = advance)
 
   report MonthlyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// ─── Requests & Notifications ──────────────────────────────────────────────────
+
+model PaymentRequest {
+  id        String   @id @default(cuid())
+  messId    String
+  memberId  String
+  amount    Float
+  trxId     String?
+  note      String?
+  status    String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mess   Mess   @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model ExpenseRequest {
+  id          String   @id @default(cuid())
+  messId      String
+  memberId    String
+  amount      Float
+  description String
+  status      String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  mess   Mess   @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model Notice {
+  id        String   @id @default(cuid())
+  messId    String
+  content   String
+  authorId  String   // User ID
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  mess Mess @relation(fields: [messId], references: [id], onDelete: Cascade)
 }

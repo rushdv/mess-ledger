@@ -7,6 +7,8 @@ import { formatCurrency, getMonthName } from "@/lib/utils";
 import {
   UtensilsCrossed, ShoppingBasket, Zap, TrendingDown, TrendingUp, Users, Wallet,
 } from "lucide-react";
+import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
+import { NoticeBoard } from "@/components/dashboard/notice-board";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -39,6 +41,8 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">{getMonthName(month)} {year} overview</p>
       </div>
+
+      <NoticeBoard />
 
       {/* ── Desktop: 5-stat grid ── */}
       <div className="hidden md:grid md:grid-cols-5 md:gap-4">
@@ -305,6 +309,20 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Premium Graphical Analytics Section */}
+      <div className="pt-4 border-t">
+        <h2 className="text-lg font-bold mb-4">Analytics & Trends</h2>
+        <DashboardCharts
+          totalBazarCost={calc.totalBazarCost}
+          totalUtility={calc.totalUtility}
+          totalIndividual={calc.totalIndividual || 0}
+          totalShared={calc.totalShared || 0}
+          totalCost={calc.totalCost}
+          totalCollected={calc.memberSummaries.reduce((acc, m) => acc + m.totalPaid, 0)}
+          memberSummaries={calc.memberSummaries}
+        />
       </div>
     </div>
   );

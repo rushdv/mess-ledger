@@ -6,7 +6,7 @@ import { useMessContext } from "@/hooks/use-mess-context";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, getMonthName } from "@/lib/utils";
 import { exportReportToPDF } from "@/lib/pdf-export";
-import { RefreshCw, TrendingUp, TrendingDown, Download } from "lucide-react";
+import { RefreshCw, TrendingUp, TrendingDown, Download, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -80,6 +80,10 @@ export default function ReportPage() {
     }
   }
 
+  function handleExportExcel() {
+    window.location.href = `/api/export?month=${month}&year=${year}`;
+  }
+
   const chartData = report?.memberSummaries.map((s) => ({
     name: s.memberName.split(" ")[0],
     "Meal": Math.round(s.mealCost),
@@ -107,6 +111,10 @@ export default function ReportPage() {
             <Button variant="outline" className="rounded-xl" onClick={handleExportPDF} disabled={!report}>
               <Download className="mr-1.5 h-4 w-4" />
               Export PDF
+            </Button>
+            <Button variant="outline" className="rounded-xl" onClick={handleExportExcel} disabled={!report}>
+              <FileSpreadsheet className="mr-1.5 h-4 w-4" />
+              Export Excel
             </Button>
             {canManage && (
               <Button variant="outline" className="rounded-xl" onClick={handleRecalculate} disabled={recalculating}>
@@ -248,6 +256,9 @@ export default function ReportPage() {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="rounded-xl" onClick={handleExportPDF} disabled={!report}>
                 <Download className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={handleExportExcel} disabled={!report}>
+                <FileSpreadsheet className="h-3.5 w-3.5" />
               </Button>
               {canManage && (
                 <Button variant="outline" size="sm" className="rounded-xl" onClick={handleRecalculate} disabled={recalculating}>

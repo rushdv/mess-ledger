@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
+import { UtilityPostSchema, zodFirstError } from "@/lib/validation";
 
 // GET /api/utility?month=5&year=2026
 export async function GET(req: NextRequest) {
@@ -44,16 +45,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
-  const { month, year, type, amount, description, date } = body;
-
-  if (!month || !year || !type || !amount) {
-    return NextResponse.json(
-      { error: "month, year, type, and amount are required" },
-      { status: 400 }
-    );
+  const raw = await req.json();
+  const parsed = UtilityPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: zodFirstError(parsed) }, { status: 400 });
   }
 
+  const { month, year, type, amount, description, date } = parsed.data;
   const entryDate = date ? new Date(date) : new Date();
 
   const entry = await prisma.utilityCost.create({
@@ -62,7 +60,7 @@ export async function POST(req: NextRequest) {
       month,
       year,
       type,
-      amount: parseFloat(amount),
+      amount,
       description: description ?? null,
       date: entryDate,
       addedBy: session.user.id,

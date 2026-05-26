@@ -6,6 +6,9 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { TopBar } from "@/components/layout/top-bar";
 
+// Force dynamic rendering — these pages read cookies (NextAuth session) at request time
+export const dynamic = "force-dynamic";
+
 export default async function ProtectedLayout({
   children,
 }: {

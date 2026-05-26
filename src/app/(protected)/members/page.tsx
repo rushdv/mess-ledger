@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { useMessContext } from "@/hooks/use-mess-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, UserX, UserCheck, Phone, Mail, Shield, Users, Crown, UserCog } from "lucide-react";
+import { Plus, UserX, UserCheck, Phone, Mail, Shield, Users, Crown, Utensils, CalendarRange } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -17,6 +18,9 @@ interface Member {
   isActive: boolean; 
   joinedAt: string;
   messRole?: string; // ADMIN | MODERATOR | MEMBER
+  defaultBreakfast: number;
+  defaultLunch: number;
+  defaultDinner: number;
   user: { id: string; name: string | null; email: string; role: string };
 }
 
@@ -27,9 +31,9 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { messContext } = useMessContext();
+  const { data: session } = useSession();
   
   // Use mess-specific role
-  const currentUserRole = messContext?.userRole || "MEMBER";
   const isMessAdmin = messContext?.isMessAdmin ?? false;
 
   const fetchMembers = useCallback(async () => {
@@ -107,13 +111,155 @@ export default function MembersPage() {
     </Dialog>
   );
 
+  const DefaultMealsDialog = ({ member }: { member: Member }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [breakfast, setBreakfast] = useState(member.defaultBreakfast.toString());
+    const [lunch, setLunch] = useState(member.defaultLunch.toString());
+    const [dinner, setDinner] = useState(member.defaultDinner.toString());
+
+    async function handleSave(e: React.FormEvent) {
+      e.preventDefault();
+      setSaving(true);
+      await fetch(`/api/members/${member.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          defaultBreakfast: parseInt(breakfast) || 0,
+          defaultLunch: parseInt(lunch) || 0,
+          defaultDinner: parseInt(dinner) || 0,
+        }),
+      });
+      setSaving(false);
+      setIsOpen(false);
+      fetchMembers();
+    }
+
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+            <Utensils className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="rounded-2xl sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Default Meals</DialogTitle>
+            <p className="text-sm text-muted-foreground">Set default daily meals for {member.user.name}</p>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4 mt-2">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Breakfast</Label>
+                <Input type="number" min="0" value={breakfast} onChange={(e) => setBreakfast(e.target.value)} className="text-center" />
+              </div>
+              <div className="space-y-2">
+                <Label>Lunch</Label>
+                <Input type="number" min="0" value={lunch} onChange={(e) => setLunch(e.target.value)} className="text-center" />
+              </div>
+              <div className="space-y-2">
+                <Label>Dinner</Label>
+                <Input type="number" min="0" value={dinner} onChange={(e) => setDinner(e.target.value)} className="text-center" />
+              </div>
+            </div>
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving ? "Saving..." : "Save Defaults"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const GenerateMealsDialog = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [generating, setGenerating] = useState(false);
+    const [msg, setMsg] = useState<{text: string, type: 'error'|'success'} | null>(null);
+    
+    // Default to current month
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+    
+    const [startDate, setStartDate] = useState(firstDay);
+    const [endDate, setEndDate] = useState(lastDay);
+
+    async function handleGenerate(e: React.FormEvent) {
+      e.preventDefault();
+      setGenerating(true);
+      setMsg(null);
+      
+      const res = await fetch("/api/meals/auto-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          startDate: new Date(startDate).toISOString(), 
+          endDate: new Date(endDate).toISOString() 
+        }),
+      });
+      
+      const data = await res.json();
+      setGenerating(false);
+      
+      if (res.ok) {
+        setMsg({ text: data.message, type: 'success' });
+        setTimeout(() => setIsOpen(false), 2000);
+      } else {
+        setMsg({ text: data.error, type: 'error' });
+      }
+    }
+
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
+            <CalendarRange className="mr-2 h-4 w-4" />
+            Auto-Meals
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="rounded-2xl sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Generate Default Meals</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Automatically assigns the default meal count for all active members. 
+              Existing meal entries within this range will be skipped.
+            </p>
+          </DialogHeader>
+          <form onSubmit={handleGenerate} className="space-y-4 mt-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+              </div>
+            </div>
+            
+            {msg && (
+              <div className={`p-3 rounded-lg text-sm ${msg.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-green-500/10 text-green-600'}`}>
+                {msg.text}
+              </div>
+            )}
+            
+            <Button type="submit" className="w-full" disabled={generating}>
+              {generating ? "Generating..." : "Generate Meals"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   const MemberRow = ({ member }: { member: Member }) => {
     const isAdmin = member.messRole === "ADMIN";
     const isModerator = member.messRole === "MODERATOR";
-    const canChangeRole = isMessAdmin && !isAdmin; // Only admin can change roles, and cannot change other admins
+    const canChangeRole = isMessAdmin && !isAdmin; 
+    const canEditDefaults = isMessAdmin || member.user.id === session?.user?.id;
     
     return (
-      <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 md:px-5 md:py-4 gap-4">
         <div className="flex items-center gap-3">
           <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
             {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
@@ -142,18 +288,27 @@ export default function MembersPage() {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Mail className="h-3 w-3" /><span className="truncate max-w-[180px]">{member.user.email}</span>
-            </div>
-            {member.phone && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Phone className="h-3 w-3" /><span>{member.phone}</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-0.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Mail className="h-3 w-3" /><span className="truncate max-w-[150px]">{member.user.email}</span>
               </div>
-            )}
-            <p className="text-xs text-muted-foreground">Joined {formatDate(member.joinedAt)}</p>
+              {member.phone && (
+                <div className="flex items-center gap-1">
+                  <Phone className="h-3 w-3" /><span>{member.phone}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="bg-accent/50 text-muted-foreground text-[10px] px-2 py-0.5 rounded-full font-medium tracking-wide">
+                DEF: {member.defaultBreakfast}-{member.defaultLunch}-{member.defaultDinner}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          {canEditDefaults && <DefaultMealsDialog member={member} />}
+          
           {canChangeRole && (
             <select
               value={member.messRole || "MEMBER"}
@@ -164,17 +319,20 @@ export default function MembersPage() {
               <option value="MODERATOR">Moderator</option>
             </select>
           )}
-          <button
-            onClick={() => toggleActive(member)}
-            className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
-              member.isActive
-                ? "text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
-                : "text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
-            }`}
-            aria-label={member.isActive ? "Deactivate" : "Reactivate"}
-          >
-            {member.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-          </button>
+          
+          {isMessAdmin && (
+            <button
+              onClick={() => toggleActive(member)}
+              className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
+                member.isActive
+                  ? "text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
+                  : "text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
+              }`}
+              aria-label={member.isActive ? "Deactivate" : "Reactivate"}
+            >
+              {member.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -189,7 +347,10 @@ export default function MembersPage() {
             <h1 className="text-2xl font-bold">Members</h1>
             <p className="text-muted-foreground">{active.length} active · {inactive.length} inactive</p>
           </div>
-          {AddDialog}
+          <div className="flex gap-3">
+            {isMessAdmin && <GenerateMealsDialog />}
+            {isMessAdmin && AddDialog}
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-6">
@@ -246,11 +407,14 @@ export default function MembersPage() {
       {/* ── MOBILE ── */}
       <div className="space-y-5 md:hidden">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{active.length} active · {inactive.length} inactive</p>
-          {AddDialog}
+          <p className="text-sm font-semibold text-foreground">Members</p>
+          <div className="flex gap-2">
+            {isMessAdmin && <GenerateMealsDialog />}
+            {isMessAdmin && AddDialog}
+          </div>
         </div>
         <div className="rounded-2xl border bg-card">
-          <div className="border-b px-4 py-3"><p className="font-semibold">Active Members</p></div>
+          <div className="border-b px-4 py-3"><p className="font-semibold">Active</p></div>
           {active.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">No active members</p>
           ) : (
@@ -259,7 +423,7 @@ export default function MembersPage() {
         </div>
         {inactive.length > 0 && (
           <div className="rounded-2xl border bg-card opacity-70">
-            <div className="border-b px-4 py-3"><p className="font-semibold text-muted-foreground">Inactive Members</p></div>
+            <div className="border-b px-4 py-3"><p className="font-semibold text-muted-foreground">Inactive</p></div>
             <div className="divide-y">{inactive.map((m) => <MemberRow key={m.id} member={m} />)}</div>
           </div>
         )}

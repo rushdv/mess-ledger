@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
 
-// PATCH /api/members/:id — update member (admin only)
+// PATCH /api/members/:id — update member (admin can update all, user can update own defaults)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -15,19 +15,44 @@ export async function PATCH(
   }
 
   const messContext = await getMessContext();
-  if (!messContext || !messContext.isMessAdmin) {
+  if (!messContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const body = await req.json();
-  const { phone, isActive } = body;
+  const { phone, isActive, defaultBreakfast, defaultLunch, defaultDinner } = body;
+
+  const targetMember = await prisma.member.findUnique({
+    where: { id: params.id, messId: messContext.messId },
+  });
+
+  if (!targetMember) {
+    return NextResponse.json({ error: "Member not found" }, { status: 404 });
+  }
+
+  const isSelf = targetMember.userId === session.user.id;
+  const isAdmin = messContext.isMessAdmin;
+
+  if (!isSelf && !isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const dataToUpdate: any = {};
+
+  // Only admin can change phone or active status
+  if (isAdmin) {
+    if (phone !== undefined) dataToUpdate.phone = phone;
+    if (isActive !== undefined) dataToUpdate.isActive = isActive;
+  }
+
+  // Self or admin can change default meals
+  if (defaultBreakfast !== undefined) dataToUpdate.defaultBreakfast = defaultBreakfast;
+  if (defaultLunch !== undefined) dataToUpdate.defaultLunch = defaultLunch;
+  if (defaultDinner !== undefined) dataToUpdate.defaultDinner = defaultDinner;
 
   const member = await prisma.member.update({
-    where: { id: params.id, messId: messContext.messId },
-    data: {
-      ...(phone !== undefined && { phone }),
-      ...(isActive !== undefined && { isActive }),
-    },
+    where: { id: params.id },
+    data: dataToUpdate,
     include: { user: true },
   });
 

@@ -8,6 +8,7 @@ export interface MessContext {
   messName: string;
   messCode: string;
   userId: string;
+  memberId: string | null; // The Member.id for this user in this mess
   userRole: string; // ADMIN | MODERATOR | MEMBER in this mess
   isMessAdmin: boolean;
   isMessModerator: boolean;
@@ -51,11 +52,23 @@ export async function getMessContext(): Promise<MessContext | null> {
     messMember = messMembers[0];
   }
 
+  // Look up the Member record for this user in this mess
+  const member = await prisma.member.findUnique({
+    where: {
+      userId_messId: {
+        userId: session.user.id,
+        messId: messMember.messId,
+      },
+    },
+    select: { id: true },
+  });
+
   return {
     messId: messMember.messId,
     messName: messMember.mess.name,
     messCode: messMember.mess.code,
     userId: session.user.id,
+    memberId: member?.id ?? null,
     userRole: messMember.role,
     isMessAdmin: messMember.role === "ADMIN",
     isMessModerator: messMember.role === "MODERATOR",

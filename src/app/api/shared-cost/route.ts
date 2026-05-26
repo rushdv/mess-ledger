@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
+import { SharedCostPostSchema, zodFirstError } from "@/lib/validation";
 
 // GET /api/shared-cost?month=5&year=2026
 export async function GET(req: NextRequest) {
@@ -38,7 +39,6 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/shared-cost — add shared cost (admin only)
-// body: { month, year, amount, description?, memberIds: string[] }
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -54,16 +54,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
-  const { month, year, amount, description, memberIds, date } = body;
-
-  if (!month || !year || !amount || !memberIds || memberIds.length === 0) {
-    return NextResponse.json(
-      { error: "month, year, amount, and memberIds are required" },
-      { status: 400 }
-    );
+  const raw = await req.json();
+  const parsed = SharedCostPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: zodFirstError(parsed) }, { status: 400 });
   }
 
+  const { month, year, amount, description, memberIds, date } = parsed.data;
   const entryDate = date ? new Date(date) : new Date();
 
   const entry = await prisma.sharedCost.create({
@@ -71,12 +68,12 @@ export async function POST(req: NextRequest) {
       messId: messContext.messId,
       month,
       year,
-      amount: parseFloat(amount),
+      amount,
       description: description ?? null,
       date: entryDate,
       addedBy: session.user.id,
       members: {
-        create: (memberIds as string[]).map((memberId) => ({ memberId })),
+        create: memberIds.map((memberId) => ({ memberId })),
       },
     },
     include: {

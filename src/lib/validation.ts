@@ -84,8 +84,19 @@ export const IndividualCostPostSchema = z.union([
 export const UtilityPostSchema = z.object({
   month: monthInt,
   year: yearInt,
+  type: z.string().min(1, "Type is required"),
   amount: positiveAmount,
   description: z.string().optional().nullable(),
+  date: dateString.optional(),
+});
+
+// ── Shared Cost ─────────────────────────────────────────────────
+export const SharedCostPostSchema = z.object({
+  month: monthInt,
+  year: yearInt,
+  amount: positiveAmount,
+  description: z.string().optional().nullable(),
+  memberIds: z.array(memberIdString).min(1, "At least one member is required"),
   date: dateString.optional(),
 });
 
