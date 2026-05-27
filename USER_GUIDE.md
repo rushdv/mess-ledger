@@ -6,7 +6,7 @@ Mess Ledger হলো একটি সম্পূর্ণ mess management syst
 
 ---
 
-## 🚀 শুরু করা (Getting Started)
+## 🚀 Getting Started (শুরু করা) 
 
 ### ১. একাউন্ট তৈরি করুন
 - **Email দিয়ে**: আপনার email এবং password দিয়ে sign up করুন
