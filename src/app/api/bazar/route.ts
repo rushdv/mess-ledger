@@ -24,6 +24,11 @@ export async function GET(req: NextRequest) {
   const entries = await prisma.bazarCost.findMany({
     where: { messId: messContext.messId, month, year },
     orderBy: { date: "desc" },
+    include: {
+      member: {
+        include: { user: { select: { name: true } } },
+      },
+    },
   });
 
   return NextResponse.json(entries);
@@ -51,7 +56,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: zodFirstError(parsed) }, { status: 400 });
   }
 
-  const { month, year, amount, description, date } = parsed.data;
+  const { month, year, amount, description, date, memberId } = parsed.data;
   const entryDate = date ? new Date(date) : new Date();
 
   const entry = await prisma.bazarCost.create({
@@ -63,6 +68,12 @@ export async function POST(req: NextRequest) {
       description: description ?? null,
       date: entryDate,
       addedBy: session.user.id,
+      memberId: memberId ?? null,
+    },
+    include: {
+      member: {
+        include: { user: { select: { name: true } } },
+      },
     },
   });
 

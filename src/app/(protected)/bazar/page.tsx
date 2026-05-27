@@ -7,10 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, formatDate } from "@/lib/utils";
-import { Plus, Trash2, ShoppingBasket } from "lucide-react";
+import { Plus, Trash2, ShoppingBasket, User } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+
+interface Member {
+  id: string;
+  user: { name: string | null };
+}
 
 interface BazarEntry {
   id: string;
@@ -19,6 +24,8 @@ interface BazarEntry {
   amount: number;
   description: string | null;
   date: string;
+  memberId: string | null;
+  member: { user: { name: string | null } } | null;
 }
 
 export default function BazarPage() {
@@ -26,12 +33,17 @@ export default function BazarPage() {
   const [month, setMonth] = useState(initMonth);
   const [year, setYear] = useState(initYear);
   const [entries, setEntries] = useState<BazarEntry[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ amount: "", description: "", date: new Date().toISOString().split('T')[0] });
+  const [form, setForm] = useState({
+    amount: "",
+    description: "",
+    date: new Date().toISOString().split("T")[0],
+    memberId: "",
+  });
   const [loading, setLoading] = useState(false);
   const { messContext } = useMessContext();
-  
-  // Check if user can manage (admin or moderator)
+
   const canManage = messContext?.canManage ?? false;
 
   const fetchEntries = useCallback(async () => {
@@ -39,7 +51,13 @@ export default function BazarPage() {
     setEntries(await res.json());
   }, [month, year]);
 
+  const fetchMembers = useCallback(async () => {
+    const res = await fetch("/api/members");
+    if (res.ok) setMembers(await res.json());
+  }, []);
+
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
+  useEffect(() => { if (canManage) fetchMembers(); }, [canManage, fetchMembers]);
 
   const total = entries.reduce((sum, e) => sum + e.amount, 0);
 
@@ -49,18 +67,19 @@ export default function BazarPage() {
     const res = await fetch("/api/bazar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        month, 
-        year, 
-        amount: parseFloat(form.amount), 
+      body: JSON.stringify({
+        month,
+        year,
+        amount: parseFloat(form.amount),
         description: form.description || null,
-        date: form.date // Send the selected date
+        date: form.date,
+        memberId: form.memberId || null,
       }),
     });
-    if (res.ok) { 
-      setForm({ amount: "", description: "", date: new Date().toISOString().split('T')[0] }); 
-      setOpen(false); 
-      fetchEntries(); 
+    if (res.ok) {
+      setForm({ amount: "", description: "", date: new Date().toISOString().split("T")[0], memberId: "" });
+      setOpen(false);
+      fetchEntries();
     }
     setLoading(false);
   }
@@ -83,25 +102,53 @@ export default function BazarPage() {
         <DialogHeader><DialogTitle>Add Bazar Entry</DialogTitle></DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Input 
-              id="date" 
-              type="date" 
-              value={form.date} 
-              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} 
-              required 
-              max={new Date().toISOString().split('T')[0]} // Cannot select future dates
+            <Label htmlFor="bazar-member">Bazar করেছেন (ঐচ্ছিক)</Label>
+            <select
+              id="bazar-member"
+              className="w-full rounded-xl border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              value={form.memberId}
+              onChange={(e) => setForm((p) => ({ ...p, memberId: e.target.value }))}
+            >
+              <option value="">— কেউ নির্বাচন করুন —</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.user.name ?? "Unknown"}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bazar-date">Date</Label>
+            <Input
+              id="bazar-date"
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
+              required
+              max={new Date().toISOString().split("T")[0]}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (৳)</Label>
-            <Input id="amount" type="number" step="0.01" min="0" placeholder="0.00"
-              value={form.amount} onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))} required />
+            <Label htmlFor="bazar-amount">Amount (৳)</Label>
+            <Input
+              id="bazar-amount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              value={form.amount}
+              onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+              required
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="desc">Description (optional)</Label>
-            <Input id="desc" placeholder="e.g. Weekly grocery"
-              value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+            <Label htmlFor="bazar-desc">Description (optional)</Label>
+            <Input
+              id="bazar-desc"
+              placeholder="e.g. Weekly grocery"
+              value={form.description}
+              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+            />
           </div>
           <Button type="submit" className="w-full rounded-xl" disabled={loading}>
             {loading ? "Adding..." : "Add Entry"}
@@ -121,7 +168,15 @@ export default function BazarPage() {
             </div>
             <div>
               <p className="font-semibold">{formatCurrency(entry.amount)}</p>
-              {entry.description && <p className="text-sm text-muted-foreground">{entry.description}</p>}
+              {entry.member?.user?.name && (
+                <p className="flex items-center gap-1 text-sm font-medium text-orange-600 dark:text-orange-400">
+                  <User className="h-3 w-3" />
+                  {entry.member.user.name}
+                </p>
+              )}
+              {entry.description && (
+                <p className="text-sm text-muted-foreground">{entry.description}</p>
+              )}
               <p className="text-xs text-muted-foreground">{formatDate(entry.date)}</p>
             </div>
           </div>

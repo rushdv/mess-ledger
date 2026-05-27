@@ -24,6 +24,7 @@ export const BazarPostSchema = z.object({
   amount: positiveAmount,
   description: z.string().optional().nullable(),
   date: dateString.optional(),
+  memberId: z.string().optional().nullable(),
 });
 
 // ── Payments ────────────────────────────────────────────────────

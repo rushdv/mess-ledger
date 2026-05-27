@@ -126,6 +126,7 @@ model Member {
   sharedCosts     SharedCostMember[]
   paymentRequests PaymentRequest[]
   expenseRequests ExpenseRequest[]
+  bazarCosts      BazarCost[]
 
   @@unique([userId, messId])
 }
@@ -153,6 +154,7 @@ model MealCount {
 model BazarCost {
   id          String   @id @default(cuid())
   messId      String
+  memberId    String?  // optional — which member did the bazar
   month       Int      // 1-12
   year        Int
   amount      Float
@@ -162,7 +164,8 @@ model BazarCost {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  mess Mess @relation(fields: [messId], references: [id], onDelete: Cascade)
+  mess   Mess    @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
 }
 
 // Monthly utility costs (electricity, gas, water, etc.)

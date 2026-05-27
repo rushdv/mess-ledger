@@ -7,7 +7,7 @@ import { z } from "zod";
 
 const NoticeSchema = z.object({
   content: z.string().min(1, "Content is required"),
-  expiresAt: z.string().datetime().optional(),
+  expiresAt: z.string().min(1).optional(),
 });
 
 export async function GET() {
