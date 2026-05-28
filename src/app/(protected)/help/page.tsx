@@ -393,7 +393,7 @@ export default function HelpPage() {
   const sections: Section[] = [
     {
       id: "getting-started",
-      title: "শুরু করা (Getting Started)",
+      title: "Getting Started (শুরু করা) ",
       icon: Home,
       content: (
         <div className="space-y-4">
