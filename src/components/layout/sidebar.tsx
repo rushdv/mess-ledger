@@ -21,6 +21,7 @@ import {
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ClipboardList, Badge } from "lucide-react";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, section: "Main" },
@@ -144,11 +145,16 @@ export function Sidebar() {
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
             {session?.user?.name?.[0]?.toUpperCase() ?? "?"}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{session?.user?.name}</p>
             <p className="truncate text-xs text-muted-foreground">{session?.user?.email}</p>
           </div>
         </div>
+        
+        <div className="px-3 pb-1">
+          <ThemeToggle />
+        </div>
+
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
