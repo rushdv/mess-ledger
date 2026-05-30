@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Sun, Moon, Monitor, Flame } from "lucide-react";
+import { Sun, Moon, Monitor, Flame, Droplet, Leaf } from "lucide-react";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -16,6 +16,8 @@ export function ThemeToggle() {
     { value: "light", icon: Sun, label: "Light" },
     { value: "dark", icon: Moon, label: "Dark" },
     { value: "orange", icon: Flame, label: "Orange" },
+    { value: "blue", icon: Droplet, label: "Ocean" },
+    { value: "emerald", icon: Leaf, label: "Emerald" },
     { value: "system", icon: Monitor, label: "System" },
   ] as const;
 
