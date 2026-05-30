@@ -102,14 +102,14 @@ export default function BazarPage() {
         <DialogHeader><DialogTitle>Add Bazar Entry</DialogTitle></DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="bazar-member">Bazar করেছেন (ঐচ্ছিক)</Label>
+            <Label htmlFor="bazar-member">Bazar By (Optional)</Label>
             <select
               id="bazar-member"
               className="w-full rounded-xl border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               value={form.memberId}
               onChange={(e) => setForm((p) => ({ ...p, memberId: e.target.value }))}
             >
-              <option value="">— কেউ নির্বাচন করুন —</option>
+              <option value="">— Select Member —</option>
               {members.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.user.name ?? "Unknown"}

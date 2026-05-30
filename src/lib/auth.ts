@@ -85,33 +85,44 @@ export const authOptions: NextAuthOptions = {
     },
     async signIn({ user, account, profile }) {
       // For Google OAuth, check if user exists and create Member if needed
-      if (account?.provider === "google") {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
+      if (account?.provider === "google" && user.email) {
+        // Find or create user in database
+        let dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
           include: { messMembers: true },
         });
 
-        // If user exists but doesn't have any mess membership, add to demo mess
-        if (existingUser && existingUser.messMembers.length === 0) {
+        // If user doesn't exist yet (first time login), PrismaAdapter might have already created it
+        // or we need to ensure they are in a mess.
+        if (!dbUser) {
+          // This case is usually handled by PrismaAdapter, but let's be safe
+          dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            include: { messMembers: true },
+          });
+        }
+
+        // If user exists (or was just created) but doesn't have any mess membership, add to demo mess
+        if (dbUser && dbUser.messMembers.length === 0) {
           // Find demo mess or first available mess
           const demoMess = await prisma.mess.findFirst({
             where: { code: "DEMO2024" },
           });
 
           if (demoMess) {
-            // Create MessMember
+            // Create MessMember (Role and access)
             await prisma.messMember.create({
               data: {
-                userId: existingUser.id,
+                userId: dbUser.id,
                 messId: demoMess.id,
                 role: "MEMBER",
               },
             });
 
-            // Create Member record
+            // Create Member record (for meals, payments, etc.)
             await prisma.member.create({
               data: {
-                userId: existingUser.id,
+                userId: dbUser.id,
                 messId: demoMess.id,
               },
             });
