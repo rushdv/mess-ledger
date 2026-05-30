@@ -6,7 +6,7 @@ import { useMessContext } from "@/hooks/use-mess-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MonthPicker } from "@/components/layout/month-picker";
-import { getCurrentMonthYear } from "@/lib/utils";
+import { getCurrentMonthYear, cn } from "@/lib/utils";
 import { Save } from "lucide-react";
 
 interface Member {
@@ -148,35 +148,56 @@ export default function MealsPage() {
           <div key={member.id} className="px-4 py-3">
             <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                <div className={cn(
+                  "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
+                  member.id === messContext?.memberId ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+                )}>
                   {(member.user.name ?? member.user.email)[0]?.toUpperCase()}
                 </div>
-                <span className="text-sm font-medium">{member.user.name?.split(" ")[0] ?? member.user.email}</span>
+                <span className={cn(
+                  "text-sm font-medium",
+                  member.id === messContext?.memberId && "text-primary font-bold"
+                )}>
+                  {member.user.name?.split(" ")[0] ?? member.user.email}
+                  {member.id === messContext?.memberId && " (You)"}
+                </span>
               </div>
               <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${dayTotal > 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                 {dayTotal}
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {(["breakfast", "lunch", "dinner"] as const).map((meal) => (
-                <div key={meal} className="space-y-1">
-                  <label className="block text-center text-xs text-muted-foreground">
-                    {meal === "breakfast" ? "🌅 B" : meal === "lunch" ? "☀️ L" : "🌙 D"}
-                  </label>
-                  <Input
-                    type="number" min={0} max={1}
-                    className="h-9 text-center text-sm font-semibold"
-                    value={e[meal]}
-                    onChange={(ev) =>
-                      setEntries((prev) => ({
-                        ...prev,
-                        [member.id]: { ...prev[member.id], [meal]: parseInt(ev.target.value) || 0 },
-                      }))
-                    }
-                    disabled={!canManage}
-                  />
-                </div>
-              ))}
+              {(["breakfast", "lunch", "dinner"] as const).map((meal) => {
+                const isEditable = canManage || (member.id === messContext?.memberId);
+                // Simple lock logic: can't edit past days or today after 10 PM
+                const isLocked = !canManage && (
+                  new Date(year, month - 1, selectedDay) < new Date(new Date().setHours(0,0,0,0)) ||
+                  (new Date().getDate() === selectedDay && new Date().getHours() >= 22)
+                );
+
+                return (
+                  <div key={meal} className="space-y-1">
+                    <label className="block text-center text-xs text-muted-foreground">
+                      {meal === "breakfast" ? "🌅 B" : meal === "lunch" ? "☀️ L" : "🌙 D"}
+                    </label>
+                    <Input
+                      type="number" min={0} max={1}
+                      className={cn(
+                        "h-9 text-center text-sm font-semibold",
+                        isEditable && !isLocked ? "border-primary/50" : ""
+                      )}
+                      value={e[meal]}
+                      onChange={(ev) =>
+                        setEntries((prev) => ({
+                          ...prev,
+                          [member.id]: { ...prev[member.id], [meal]: parseInt(ev.target.value) || 0 },
+                        }))
+                      }
+                      disabled={!isEditable || isLocked}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         );

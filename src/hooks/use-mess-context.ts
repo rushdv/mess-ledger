@@ -5,6 +5,7 @@ interface MessContextData {
   messName: string;
   messCode: string;
   userId: string;
+  memberId: string | null;
   userRole: string; // ADMIN | MODERATOR | MEMBER
   isMessAdmin: boolean;
   isMessModerator: boolean;

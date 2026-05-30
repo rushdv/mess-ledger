@@ -44,6 +44,43 @@ export default async function DashboardPage() {
 
       <NoticeBoard />
 
+      {/* ── Status Card: Highlights what the user needs to know ── */}
+      {mySummary && (
+        <div className={`rounded-2xl border p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm ${
+          mySummary.due > 0 
+            ? "bg-red-50 border-red-100 dark:bg-red-950/30 dark:border-red-900/50" 
+            : "bg-green-50 border-green-100 dark:bg-green-950/30 dark:border-green-900/50"
+        }`}>
+          <div className="flex items-center gap-4">
+            <div className={`rounded-2xl p-4 ${
+              mySummary.due > 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-green-100 dark:bg-green-900/50"
+            }`}>
+              <Wallet className={`h-8 w-8 ${
+                mySummary.due > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+              }`} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">
+                {mySummary.due > 0 ? "You have a pending due" : "You are all clear!"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {mySummary.due > 0 
+                  ? `Please clear your due of ${formatCurrency(mySummary.due)} to keep the mess running smoothly.` 
+                  : `You have an advance of ${formatCurrency(Math.abs(mySummary.due))}. Great job!`}
+              </p>
+            </div>
+          </div>
+          <div className="text-center md:text-right">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Current Balance</p>
+            <p className={`text-4xl font-black ${
+              mySummary.due > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+            }`}>
+              {mySummary.due > 0 ? "-" : "+"}{formatCurrency(Math.abs(mySummary.due))}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── Desktop: 5-stat grid ── */}
       <div className="hidden md:grid md:grid-cols-5 md:gap-4">
         {[

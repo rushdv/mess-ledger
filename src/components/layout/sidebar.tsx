@@ -18,31 +18,53 @@ import {
   Building2,
   BookOpen,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Badge } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/meals", label: "Meal Count", icon: UtensilsCrossed },
-  { href: "/bazar", label: "Bazar Cost", icon: ShoppingBasket },
-  { href: "/requests", label: "Requests", icon: ClipboardList },
-  { href: "/utility", label: "Utility", icon: Zap, adminOnly: true },
-  { href: "/individual-cost", label: "Individual Cost", icon: Receipt, adminOnly: true },
-  { href: "/shared-cost", label: "Shared Cost", icon: Share2, adminOnly: true },
-  { href: "/payments", label: "Payments", icon: CreditCard, adminOnly: true },
-  { href: "/report", label: "Report", icon: BarChart3 },
-  { href: "/members", label: "Members", icon: Users, adminOnly: true },
-  { href: "/help", label: "Help & Guide", icon: BookOpen },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, section: "Main" },
+  { href: "/meals", label: "Meal Count", icon: UtensilsCrossed, section: "Main" },
+  { href: "/bazar", label: "Bazar Cost", icon: ShoppingBasket, section: "Main" },
+  { href: "/requests", label: "Requests", icon: ClipboardList, section: "Main", showBadge: true },
+  { href: "/report", label: "Report", icon: BarChart3, section: "Main" },
+  { href: "/help", label: "Help & Guide", icon: BookOpen, section: "Support" },
+  { href: "/utility", label: "Utility", icon: Zap, adminOnly: true, section: "Management" },
+  { href: "/individual-cost", label: "Individual Cost", icon: Receipt, adminOnly: true, section: "Management" },
+  { href: "/shared-cost", label: "Shared Cost", icon: Share2, adminOnly: true, section: "Management" },
+  { href: "/payments", label: "Payments", icon: CreditCard, adminOnly: true, section: "Management" },
+  { href: "/members", label: "Members", icon: Users, adminOnly: true, section: "Management" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { messContext } = useMessContext();
+  const [requestCount, setRequestCount] = useState(0);
   
   // Use mess-specific role, not global role
   const canManage = messContext?.canManage ?? false;
+
+  useEffect(() => {
+    async function fetchCount() {
+      try {
+        const res = await fetch("/api/requests/count");
+        if (res.ok) {
+          const data = await res.json();
+          setRequestCount(data.total);
+        }
+      } catch (e) {
+        console.error("Failed to fetch request count", e);
+      }
+    }
+    if (session) fetchCount();
+    
+    // Refresh count every 2 minutes
+    const interval = setInterval(fetchCount, 120000);
+    return () => clearInterval(interval);
+  }, [session]);
+
+  const sections = ["Main", "Management", "Support"];
 
   return (
     // Hidden on mobile, visible on md+
@@ -57,24 +79,52 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map((item) => {
-          if (item.adminOnly && !canManage) return null;
-          const Icon = item.icon;
-          const isActive = pathname === item.href;
+        {sections.map((section) => {
+          const sectionItems = navItems.filter(
+            (item) => 
+              item.section === section && 
+              (!item.adminOnly || canManage)
+          );
+          
+          if (sectionItems.length === 0) return null;
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
+            <div key={section} className="mb-6">
+              <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {section}
+              </p>
+              <div className="space-y-1">
+                {sectionItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="h-4 w-4 shrink-0" />
+                        {item.label}
+                      </div>
+                      {item.showBadge && requestCount > 0 && (
+                        <span className={cn(
+                          "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
+                          isActive ? "bg-white text-primary" : "bg-primary text-primary-foreground shadow-sm"
+                        )}>
+                          {requestCount}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </nav>
