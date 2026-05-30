@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useMessContext } from "@/hooks/use-mess-context";
-import { Zap, CreditCard, Users, LogOut, ChevronRight, Receipt, Share2, Sun, Moon, Monitor, Building2, BookOpen } from "lucide-react";
+import { Zap, CreditCard, Users, LogOut, ChevronRight, Receipt, Share2, Sun, Moon, Monitor, Building2, BookOpen, Flame } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
@@ -18,6 +18,7 @@ const adminItems = [
 const themeOptions = [
   { value: "light", icon: Sun, label: "Light" },
   { value: "dark", icon: Moon, label: "Dark" },
+  { value: "orange", icon: Flame, label: "Orange" },
   { value: "system", icon: Monitor, label: "System" },
 ] as const;
 
@@ -58,7 +59,7 @@ export default function MorePage() {
         <div className="overflow-hidden rounded-2xl border bg-card p-4">
           <p className="mb-3 text-sm font-medium">Theme</p>
           {mounted && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {themeOptions.map(({ value, icon: Icon, label }) => (
                 <button
                   key={value}

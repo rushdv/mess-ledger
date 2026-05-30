@@ -96,12 +96,12 @@ export async function calculateMonthly(
   });
 
   // Totals
-  const totalBazarCost = bazarCosts.reduce((sum, b) => sum + b.amount, 0);
-  const totalUtility = utilityCosts.reduce((sum, u) => sum + u.amount, 0);
-  const totalIndividual = individualCosts.reduce((sum, c) => sum + c.amount, 0);
-  const totalShared = sharedCosts.reduce((sum, c) => sum + c.amount, 0);
+  const totalBazarCost = bazarCosts.reduce((sum, b) => sum + Number(b.amount), 0);
+  const totalUtility = utilityCosts.reduce((sum, u) => sum + Number(u.amount), 0);
+  const totalIndividual = individualCosts.reduce((sum, c) => sum + Number(c.amount), 0);
+  const totalShared = sharedCosts.reduce((sum, c) => sum + Number(c.amount), 0);
   const totalCost = totalBazarCost + totalUtility + totalIndividual + totalShared;
-  const totalCollected = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalCollected = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const messBalance = totalCollected - totalCost;
 
   // Total meals across all members
@@ -124,21 +124,21 @@ export async function calculateMonthly(
     const utilityShare = utilityPerHead;
     const memberIndividualCost = individualCosts
       .filter((c) => c.memberId === member.id)
-      .reduce((sum, c) => sum + c.amount, 0);
+      .reduce((sum, c) => sum + Number(c.amount), 0);
 
     // Shared cost: for each shared cost entry this member is part of,
     // split equally among the members in that entry
     const memberSharedCost = sharedCosts.reduce((sum, sc) => {
       const memberIds = sc.members.map((m) => m.memberId);
       if (!memberIds.includes(member.id)) return sum;
-      return sum + sc.amount / memberIds.length;
+      return sum + Number(sc.amount) / memberIds.length;
     }, 0);
 
     const memberTotalCost = mealCost + utilityShare + memberIndividualCost + memberSharedCost;
 
     const totalPaid = payments
       .filter((p) => p.memberId === member.id)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .reduce((sum, p) => sum + Number(p.amount), 0);
 
     const due = memberTotalCost - totalPaid;
 

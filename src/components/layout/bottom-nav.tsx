@@ -9,6 +9,7 @@ import {
   ShoppingBasket,
   BarChart3,
   MoreHorizontal,
+  ClipboardList,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,8 @@ const primaryNav = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/meals", label: "Meals", icon: UtensilsCrossed },
   { href: "/bazar", label: "Bazar", icon: ShoppingBasket },
-  { href: "/requests", label: "Requests", icon: MoreHorizontal, showBadge: true },
+  { href: "/requests", label: "Requests", icon: ClipboardList, showBadge: true },
+  { href: "/more", label: "More", icon: MoreHorizontal },
 ];
 
 export function BottomNav() {
@@ -50,7 +52,10 @@ export function BottomNav() {
       <div className="flex h-16 items-center justify-around px-2">
         {items.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = 
+            item.href === "/more"
+              ? ["/utility", "/payments", "/members", "/individual-cost", "/shared-cost", "/more", "/help", "/select-mess"].includes(pathname)
+              : pathname === item.href;
 
           return (
             <Link
