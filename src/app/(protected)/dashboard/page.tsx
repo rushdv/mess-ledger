@@ -357,7 +357,7 @@ export default async function DashboardPage() {
           totalIndividual={calc.totalIndividual || 0}
           totalShared={calc.totalShared || 0}
           totalCost={calc.totalCost}
-          totalCollected={calc.memberSummaries.reduce((acc, m) => acc + m.totalPaid, 0)}
+          totalCollected={calc.totalCollected}
           memberSummaries={calc.memberSummaries}
         />
       </div>

@@ -57,14 +57,16 @@ export default function IndividualCostPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const total = entries.reduce((sum, e) => sum + e.amount, 0);
+  const total = Math.round(entries.reduce((sum, e) => sum + Number(e.amount), 0) * 100) / 100;
 
   // Per-member totals for sidebar
   const memberTotals = members
     .map((m) => ({
       name: m.user.name ?? m.user.email,
       initial: (m.user.name ?? m.user.email)[0]?.toUpperCase(),
-      total: entries.filter((e) => e.memberId === m.id).reduce((s, e) => s + e.amount, 0),
+      total: Math.round(
+        entries.filter((e) => e.memberId === m.id).reduce((s, e) => s + Number(e.amount), 0) * 100
+      ) / 100,
     }))
     .filter((m) => m.total > 0);
 

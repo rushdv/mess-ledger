@@ -56,9 +56,9 @@ export default function UtilityPage() {
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
 
-  const total = entries.reduce((sum, e) => sum + e.amount, 0);
+  const total = Math.round(entries.reduce((sum, e) => sum + Number(e.amount), 0) * 100) / 100;
   const byType = UTILITY_TYPES.reduce((acc, t) => {
-    acc[t] = entries.filter((e) => e.type === t).reduce((s, e) => s + e.amount, 0);
+    acc[t] = Math.round(entries.filter((e) => e.type === t).reduce((s, e) => s + Number(e.amount), 0) * 100) / 100;
     return acc;
   }, {} as Record<UtilityType, number>);
 

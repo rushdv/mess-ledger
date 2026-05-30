@@ -217,7 +217,7 @@ export default function ReportPage() {
                       <td className="px-4 py-3 text-right font-semibold">{formatCurrency(report.totalShared ?? 0)}</td>
                       <td className="px-4 py-3 text-right font-semibold">{formatCurrency(report.totalCost)}</td>
                       <td className="px-4 py-3 text-right font-semibold text-green-600 dark:text-green-400">
-                        {formatCurrency(report.memberSummaries.reduce((s, m) => s + m.totalPaid, 0))}
+                        {formatCurrency(report.totalCollected)}
                       </td>
                       <td className="px-5 py-3" />
                     </tr>

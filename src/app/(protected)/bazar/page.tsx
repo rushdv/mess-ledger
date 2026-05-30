@@ -59,7 +59,7 @@ export default function BazarPage() {
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
   useEffect(() => { if (canManage) fetchMembers(); }, [canManage, fetchMembers]);
 
-  const total = entries.reduce((sum, e) => sum + e.amount, 0);
+  const total = Math.round(entries.reduce((sum, e) => sum + Number(e.amount), 0) * 100) / 100;
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -241,11 +241,11 @@ export default function BazarPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Average per entry</span>
-                    <span className="font-medium">{formatCurrency(total / entries.length)}</span>
+                    <span className="font-medium">{formatCurrency(Math.round((total / entries.length) * 100) / 100)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Largest entry</span>
-                    <span className="font-medium">{formatCurrency(Math.max(...entries.map((e) => e.amount)))}</span>
+                    <span className="font-medium">{formatCurrency(Math.max(...entries.map((e) => Number(e.amount))))}</span>
                   </div>
                 </div>
               </div>

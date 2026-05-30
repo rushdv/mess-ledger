@@ -52,7 +52,7 @@ export default function SharedCostPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const total = entries.reduce((sum, e) => sum + e.amount, 0);
+  const total = Math.round(entries.reduce((sum, e) => sum + Number(e.amount), 0) * 100) / 100;
 
   function toggleMember(id: string) {
     setForm((prev) => ({
@@ -210,7 +210,7 @@ export default function SharedCostPage() {
   const EntriesList = (
     <div className="divide-y">
       {entries.map((entry) => {
-        const perHead = entry.amount / entry.members.length;
+        const perHead = Math.round((Number(entry.amount) / entry.members.length) * 100) / 100;
         return (
           <div key={entry.id} className="px-4 py-3 md:px-5 md:py-4">
             <div className="flex items-start justify-between gap-3">

@@ -45,7 +45,7 @@ export default function PaymentsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const total = payments.reduce((sum, p) => sum + p.amount, 0);
+  const total = payments.reduce((sum, p) => sum + Number(p.amount), 0);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault(); setLoading(true);
@@ -294,7 +294,10 @@ export default function PaymentsPage() {
   // Per-member totals for desktop sidebar
   const memberTotals = members.map((m) => ({
     name: m.user.name ?? m.user.email,
-    total: payments.filter((p) => p.memberId === m.id).reduce((s, p) => s + p.amount, 0),
+    total: Math.round(
+      payments.filter((p) => p.memberId === m.id)
+        .reduce((s, p) => s + Number(p.amount), 0) * 100
+    ) / 100,
   })).filter((m) => m.total > 0);
 
   return (

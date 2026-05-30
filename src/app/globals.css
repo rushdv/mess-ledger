@@ -27,94 +27,95 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    /* Classic deep dark with slightly elevated card */
+    --background: 224 20% 7%;
+    --foreground: 213 31% 93%;
+    --card: 224 20% 10%;
+    --card-foreground: 213 31% 93%;
+    --popover: 224 20% 10%;
+    --popover-foreground: 213 31% 93%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 224 47% 10%;
+    --secondary: 217 20% 18%;
+    --secondary-foreground: 213 31% 93%;
+    --muted: 217 20% 15%;
+    --muted-foreground: 215 20% 58%;
+    --accent: 217 20% 18%;
+    --accent-foreground: 213 31% 93%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 217 18% 20%;
+    --input: 217 18% 20%;
+    --ring: 217 91% 60%;
   }
 
   .orange {
-    /* Professional Deep Dark Orange */
-    --background: 15 30% 8%;
-    --foreground: 30 20% 90%; 
-    --card: 15 25% 12%; 
-    --card-foreground: 30 20% 90%;
-    --popover: 15 25% 12%;
-    --popover-foreground: 30 20% 90%;
-    --primary: 24 95% 53%; 
-    --primary-foreground: 0 0% 100%;
-    --secondary: 24 30% 20%;
-    --secondary-foreground: 30 20% 90%;
-    --muted: 24 20% 16%;
-    --muted-foreground: 24 15% 65%;
-    --accent: 24 30% 20%;
-    --accent-foreground: 30 20% 90%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 24 20% 20%;
-    --input: 24 20% 20%;
-    --ring: 24 95% 53%;
+    /* Ember — deep dark orange/amber */
+    --background: 20 25% 7%;
+    --foreground: 35 30% 92%;
+    --card: 20 22% 11%;
+    --card-foreground: 35 30% 92%;
+    --popover: 20 22% 11%;
+    --popover-foreground: 35 30% 92%;
+    --primary: 28 100% 55%;
+    --primary-foreground: 20 15% 8%;
+    --secondary: 24 22% 18%;
+    --secondary-foreground: 35 30% 92%;
+    --muted: 24 18% 14%;
+    --muted-foreground: 30 20% 58%;
+    --accent: 24 22% 20%;
+    --accent-foreground: 35 30% 92%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 24 18% 22%;
+    --input: 24 18% 18%;
+    --ring: 28 100% 55%;
   }
 
   .blue {
-    /* Professional Ocean Blue Theme */
-    --background: 220 40% 6%; 
-    --foreground: 210 20% 90%;
-    --card: 220 40% 10%; 
-    --card-foreground: 210 20% 90%;
-    --popover: 220 40% 10%;
-    --popover-foreground: 210 20% 90%;
-    --primary: 221 83% 53%; 
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 30% 18%; 
-    --secondary-foreground: 210 20% 90%;
-    --muted: 220 20% 14%;
-    --muted-foreground: 220 15% 65%;
-    --accent: 220 30% 18%;
-    --accent-foreground: 210 20% 90%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 25% 18%;
-    --input: 220 25% 18%;
-    --ring: 221 83% 53%;
+    /* Ocean — deep navy with electric blue accents */
+    --background: 222 35% 7%;
+    --foreground: 210 30% 93%;
+    --card: 222 32% 11%;
+    --card-foreground: 210 30% 93%;
+    --popover: 222 32% 11%;
+    --popover-foreground: 210 30% 93%;
+    --primary: 213 94% 62%;
+    --primary-foreground: 222 35% 8%;
+    --secondary: 218 25% 18%;
+    --secondary-foreground: 210 30% 93%;
+    --muted: 220 22% 14%;
+    --muted-foreground: 215 20% 58%;
+    --accent: 218 25% 20%;
+    --accent-foreground: 210 30% 93%;
+    --destructive: 0 78% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 22% 21%;
+    --input: 220 22% 18%;
+    --ring: 213 94% 62%;
   }
 
   .emerald {
-    /* Professional Forest Emerald Theme */
-    --background: 150 40% 6%; 
-    --foreground: 150 20% 90%;
-    --card: 150 40% 10%; 
-    --card-foreground: 150 20% 90%;
-    --popover: 150 40% 10%;
-    --popover-foreground: 150 20% 90%;
-    --primary: 150 80% 45%; 
-    --primary-foreground: 0 0% 100%;
-    --secondary: 150 30% 18%; 
-    --secondary-foreground: 150 20% 90%;
-    --muted: 150 20% 14%;
-    --muted-foreground: 150 15% 65%;
-    --accent: 150 30% 18%;
-    --accent-foreground: 150 20% 90%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 150 25% 18%;
-    --input: 150 25% 18%;
-    --ring: 150 80% 45%;
+    /* Forest — deep dark green with vivid emerald accents */
+    --background: 155 30% 7%;
+    --foreground: 145 20% 92%;
+    --card: 155 28% 11%;
+    --card-foreground: 145 20% 92%;
+    --popover: 155 28% 11%;
+    --popover-foreground: 145 20% 92%;
+    --primary: 152 76% 48%;
+    --primary-foreground: 155 30% 7%;
+    --secondary: 150 22% 18%;
+    --secondary-foreground: 145 20% 92%;
+    --muted: 152 18% 14%;
+    --muted-foreground: 150 15% 58%;
+    --accent: 150 22% 20%;
+    --accent-foreground: 145 20% 92%;
+    --destructive: 0 78% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 152 18% 21%;
+    --input: 152 18% 18%;
+    --ring: 152 76% 48%;
   }
 }
 
