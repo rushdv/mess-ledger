@@ -136,7 +136,7 @@ export default function RequestsPage() {
                 <span className="font-semibold text-base">{req.member.user.name || req.member.user.email}</span>
                 <StatusBadge status={req.status} />
               </div>
-              <p className="text-sm font-medium text-primary">৳{req.amount.toFixed(2)}</p>
+              <p className="text-sm font-medium text-primary">৳{Number(req.amount).toFixed(2)}</p>
               
               <div className="text-sm text-muted-foreground mt-1">
                 {type === "payment" ? (

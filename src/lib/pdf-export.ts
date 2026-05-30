@@ -4,8 +4,8 @@ import { getMonthName } from "./utils";
 import { notoBengaliBase64 } from "@/lib/fonts/noto-sans-bengali";
 
 // Helper function to format currency without special symbols
-function formatCurrencyForPDF(amount: number): string {
-  return `Tk ${amount.toFixed(2)}`;
+function formatCurrencyForPDF(amount: number | any): string {
+  return `Tk ${Number(amount).toFixed(2)}`;
 }
 
 interface MemberSummary {

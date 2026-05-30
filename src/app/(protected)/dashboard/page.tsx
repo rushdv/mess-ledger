@@ -85,9 +85,9 @@ export default async function DashboardPage() {
       <div className="hidden md:grid md:grid-cols-5 md:gap-4">
         {[
           { label: "Total Cost", value: formatCurrency(calc.totalCost), icon: ShoppingBasket, color: "text-primary", bg: "bg-primary/10", desc: `${getMonthName(month)} ${year}` },
-          { label: "Total Meals", value: calc.totalMeals.toString(), icon: UtensilsCrossed, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950", desc: `৳${calc.mealRate.toFixed(2)}/meal` },
+          { label: "Total Meals", value: calc.totalMeals.toString(), icon: UtensilsCrossed, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950", desc: `৳${Number(calc.mealRate).toFixed(2)}/meal` },
           { label: "Bazar Cost", value: formatCurrency(calc.totalBazarCost), icon: ShoppingBasket, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950", desc: "Grocery expenses" },
-          { label: "Utility", value: formatCurrency(calc.totalUtility), icon: Zap, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-950", desc: `${formatCurrency(calc.utilityPerHead)}/member` },
+          { label: "Utility", value: formatCurrency(calc.totalUtility), icon: Zap, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-950", desc: `${formatCurrency(Number(calc.utilityPerHead))}/member` },
           {
             label: "Mess Balance",
             value: (calc.messBalance >= 0 ? "+" : "") + formatCurrency(calc.messBalance),

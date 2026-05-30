@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -158,7 +157,7 @@ model BazarCost {
   memberId    String?  // optional — which member did the bazar
   month       Int      // 1-12
   year        Int
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Decimal
   description String?
   date        DateTime @default(now())
   addedBy     String   // userId
@@ -176,7 +175,7 @@ model UtilityCost {
   month       Int
   year        Int
   type        String   // ELECTRICITY | GAS | WATER | INTERNET | OTHER
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Decimal
   description String?
   date        DateTime @default(now()) // Date of the utility bill
   addedBy     String   // userId
@@ -192,7 +191,7 @@ model SharedCost {
   messId      String
   month       Int
   year        Int
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Decimal
   description String?
   date        DateTime @default(now()) // Date of the shared cost
   addedBy     String   // userId
@@ -222,7 +221,7 @@ model IndividualCost {
   messId      String
   month       Int
   year        Int
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Decimal
   description String?
   date        DateTime @default(now()) // Date of the individual cost
   addedBy     String   // userId
@@ -240,7 +239,7 @@ model Payment {
   messId    String
   month     Int
   year      Int
-  amount    Decimal  @db.Decimal(10, 2)
+  amount    Decimal
   note      String?
   date      DateTime @default(now()) // Date of payment
   addedBy   String   // userId
@@ -258,12 +257,12 @@ model MonthlyReport {
   month           Int
   year            Int
   totalMeals      Int
-  totalBazarCost  Decimal  @db.Decimal(10, 2)
-  totalUtility    Decimal  @db.Decimal(10, 2)
-  totalCost       Decimal  @db.Decimal(10, 2)
-  mealRate        Decimal  @db.Decimal(10, 2)    // totalBazarCost / totalMeals
-  utilityPerHead  Decimal  @db.Decimal(10, 2)    // totalUtility / activeMembers
-  calculatedAt    DateTime @default(now())
+  totalBazarCost  Decimal
+  totalUtility    Decimal
+  totalCost       Decimal
+  mealRate        Decimal    // totalBazarCost / totalMeals
+  utilityPerHead  Decimal    // totalUtility / activeMembers
+  calculatedAt    DateTime   @default(now())
 
   mess            Mess                   @relation(fields: [messId], references: [id], onDelete: Cascade)
   memberSummaries MemberMonthlySummary[]
@@ -277,13 +276,13 @@ model MemberMonthlySummary {
   memberId       String
   memberName     String
   totalMeals     Int
-  mealCost       Decimal @db.Decimal(10, 2)  // meals × mealRate
-  utilityShare   Decimal @db.Decimal(10, 2)
-  individualCost Decimal @default(0) @db.Decimal(10, 2) // personal/individual charges
-  sharedCost     Decimal @default(0) @db.Decimal(10, 2) // shared costs split among selected members
-  totalCost      Decimal @db.Decimal(10, 2)  // mealCost + utilityShare + individualCost + sharedCost
-  totalPaid      Decimal @db.Decimal(10, 2)
-  due            Decimal @db.Decimal(10, 2)  // totalCost - totalPaid (positive = owes, negative = advance)
+  mealCost       Decimal  // meals × mealRate
+  utilityShare   Decimal
+  individualCost Decimal  @default(0)  // personal/individual charges
+  sharedCost     Decimal  @default(0)  // shared costs split among selected members
+  totalCost      Decimal  // mealCost + utilityShare + individualCost + sharedCost
+  totalPaid      Decimal
+  due            Decimal  // totalCost - totalPaid (positive = owes, negative = advance)
 
   report MonthlyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
 }
@@ -294,7 +293,7 @@ model PaymentRequest {
   id        String   @id @default(cuid())
   messId    String
   memberId  String
-  amount    Decimal  @db.Decimal(10, 2)
+  amount    Decimal
   trxId     String?
   note      String?
   status    String   @default("PENDING") // PENDING | APPROVED | REJECTED
@@ -310,7 +309,7 @@ model ExpenseRequest {
   id          String   @id @default(cuid())
   messId      String
   memberId    String
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Decimal
   description String
   status      String   @default("PENDING") // PENDING | APPROVED | REJECTED
   date        DateTime @default(now())
