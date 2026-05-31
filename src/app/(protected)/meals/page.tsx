@@ -77,8 +77,7 @@ export default function MealsPage() {
       init[m.id] = { breakfast: meal?.breakfast ?? 0, lunch: meal?.lunch ?? 0, dinner: meal?.dinner ?? 0 };
     }
     setEntries(init);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDay, month, year, mealMap]);
+  }, [selectedDay, month, year, mealMap, visibleMembers]);
 
   async function handleSaveAll() {
     setSaving(true);

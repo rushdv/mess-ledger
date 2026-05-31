@@ -27,7 +27,7 @@ export function NoticeBoard() {
 
   useEffect(() => {
     fetchNotices();
-  }, []);
+  }, [messContext?.messId]);
 
   async function fetchNotices() {
     const res = await fetch("/api/notices");

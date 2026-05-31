@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
 
-// PATCH /api/members/:id — update member (admin can update all, user can update own defaults)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -37,29 +36,33 @@ export async function PATCH(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const dataToUpdate: any = {};
+  const dataToUpdate: Record<string, unknown> = {};
 
-  // Only admin can change phone or active status
   if (isAdmin) {
     if (phone !== undefined) dataToUpdate.phone = phone;
     if (isActive !== undefined) dataToUpdate.isActive = isActive;
   }
 
-  // Self or admin can change default meals
   if (defaultBreakfast !== undefined) dataToUpdate.defaultBreakfast = defaultBreakfast;
   if (defaultLunch !== undefined) dataToUpdate.defaultLunch = defaultLunch;
   if (defaultDinner !== undefined) dataToUpdate.defaultDinner = defaultDinner;
 
-  const member = await prisma.member.update({
-    where: { id: params.id },
-    data: dataToUpdate,
-    include: { user: true },
-  });
+  try {
+    const member = await prisma.member.update({
+      where: { id: params.id },
+      data: dataToUpdate,
+      include: { user: true },
+    });
 
-  return NextResponse.json(member);
+    return NextResponse.json(member);
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    }
+    return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
+  }
 }
 
-// DELETE /api/members/:id — deactivate member (admin only)
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
@@ -74,10 +77,17 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const member = await prisma.member.update({
-    where: { id: params.id, messId: messContext.messId },
-    data: { isActive: false },
-  });
+  try {
+    const member = await prisma.member.update({
+      where: { id: params.id, messId: messContext.messId },
+      data: { isActive: false },
+    });
 
-  return NextResponse.json(member);
+    return NextResponse.json(member);
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    }
+    return NextResponse.json({ error: "Failed to deactivate member" }, { status: 500 });
+  }
 }

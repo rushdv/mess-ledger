@@ -2,8 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+
+  if (entry.count >= 10) {
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Too many registration attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { name, email, password } = await req.json();
 
     if (!name || !email || !password) {
@@ -20,7 +48,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
@@ -32,10 +59,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create the user
     const user = await prisma.user.create({
       data: {
         name,
@@ -45,13 +70,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Auto-join first available mess or demo mess if exists
     const demoMess = await prisma.mess.findFirst({
       where: { code: "DEMO2024" },
     });
 
     if (demoMess) {
-      // Create MessMember junction record
       await prisma.messMember.create({
         data: {
           userId: user.id,
@@ -60,14 +83,12 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Create Member record
       await prisma.member.create({
         data: {
           userId: user.id,
           messId: demoMess.id,
         },
       });
-      console.log(`Auto-joined new user ${email} to demo mess DEMO2024`);
     }
 
     return NextResponse.json(
@@ -82,7 +103,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Registration error:", error);
     return NextResponse.json(
       { error: "Internal server error during registration" },
       { status: 500 }

@@ -5,8 +5,12 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const hasGoogleProvider = !!(googleClientId && googleClientSecret);
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
+  adapter: hasGoogleProvider ? (PrismaAdapter(prisma) as NextAuthOptions["adapter"]) : undefined,
   session: {
     strategy: "jwt",
   },
@@ -14,10 +18,14 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...(hasGoogleProvider
+      ? [
+          GoogleProvider({
+            clientId: googleClientId!,
+            clientSecret: googleClientSecret!,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -30,10 +38,14 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email.toLowerCase() },
         });
 
-        if (!user || !user.password) {
+        if (!user) {
+          return null;
+        }
+
+        if (!user.password) {
           return null;
         }
 
@@ -51,19 +63,17 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-        } as any;
+        };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account, trigger }) {
-      // On sign in, add user info to token
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.role = (user as { id: string; role?: string }).role || "MEMBER";
       }
-      
-      // For Google OAuth, ensure we have the user ID from database
+
       if (account?.provider === "google" && token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
@@ -73,7 +83,7 @@ export const authOptions: NextAuthOptions = {
           token.role = dbUser.role;
         }
       }
-      
+
       return token;
     },
     async session({ session, token }) {
@@ -83,34 +93,19 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async signIn({ user, account, profile }) {
-      // For Google OAuth, check if user exists and create Member if needed
+    async signIn({ user, account }) {
       if (account?.provider === "google" && user.email) {
-        // Find or create user in database
-        let dbUser = await prisma.user.findUnique({
+        const dbUser = await prisma.user.findUnique({
           where: { email: user.email },
           include: { messMembers: true },
         });
 
-        // If user doesn't exist yet (first time login), PrismaAdapter might have already created it
-        // or we need to ensure they are in a mess.
-        if (!dbUser) {
-          // This case is usually handled by PrismaAdapter, but let's be safe
-          dbUser = await prisma.user.findUnique({
-            where: { email: user.email },
-            include: { messMembers: true },
-          });
-        }
-
-        // If user exists (or was just created) but doesn't have any mess membership, add to demo mess
         if (dbUser && dbUser.messMembers.length === 0) {
-          // Find demo mess or first available mess
           const demoMess = await prisma.mess.findFirst({
             where: { code: "DEMO2024" },
           });
 
           if (demoMess) {
-            // Create MessMember (Role and access)
             await prisma.messMember.create({
               data: {
                 userId: dbUser.id,
@@ -119,7 +114,6 @@ export const authOptions: NextAuthOptions = {
               },
             });
 
-            // Create Member record (for meals, payments, etc.)
             await prisma.member.create({
               data: {
                 userId: dbUser.id,

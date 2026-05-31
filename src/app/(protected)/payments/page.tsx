@@ -45,7 +45,7 @@ export default function PaymentsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const total = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const total = Math.round(payments.reduce((sum, p) => sum + Number(p.amount), 0) * 100) / 100;
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault(); setLoading(true);

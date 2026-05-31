@@ -5,7 +5,6 @@ import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-// GET /api/members — list all members in current mess
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -27,7 +26,6 @@ export async function GET() {
     orderBy: { joinedAt: "asc" },
   });
 
-  // Get MessMember roles for each member
   const memberIds = members.map((m) => m.userId);
   const messMembers = await prisma.messMember.findMany({
     where: {
@@ -39,7 +37,6 @@ export async function GET() {
 
   const roleMap = new Map(messMembers.map((mm) => [mm.userId, mm.role]));
 
-  // Add messRole to each member
   const membersWithRole = members.map((member) => ({
     ...member,
     messRole: roleMap.get(member.userId) || "MEMBER",
@@ -48,7 +45,6 @@ export async function GET() {
   return NextResponse.json(membersWithRole);
 }
 
-// POST /api/members — add a new member (admin only)
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -74,6 +70,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (password.length < 6) {
+    return NextResponse.json(
+      { error: "Password must be at least 6 characters long" },
+      { status: 400 }
+    );
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return NextResponse.json(
+      { error: "Invalid email format" },
+      { status: 400 }
+    );
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json({ error: "Email already exists" }, { status: 409 });
@@ -81,32 +92,34 @@ export async function POST(req: NextRequest) {
 
   const hashed = await bcrypt.hash(password, 12);
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashed,
-      role: "MEMBER",
-    },
-  });
+  const member = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name,
+        email,
+        password: hashed,
+        role: "MEMBER",
+      },
+    });
 
-  // Create member in this mess
-  const member = await prisma.member.create({
-    data: {
-      userId: user.id,
-      messId: messContext.messId,
-      phone: phone ?? null,
-    },
-    include: { user: true },
-  });
+    const memberRecord = await tx.member.create({
+      data: {
+        userId: user.id,
+        messId: messContext.messId,
+        phone: phone ?? null,
+      },
+      include: { user: true },
+    });
 
-  // Create MessMember
-  await prisma.messMember.create({
-    data: {
-      userId: user.id,
-      messId: messContext.messId,
-      role: "MEMBER",
-    },
+    await tx.messMember.create({
+      data: {
+        userId: user.id,
+        messId: messContext.messId,
+        role: "MEMBER",
+      },
+    });
+
+    return memberRecord;
   });
 
   return NextResponse.json(member, { status: 201 });

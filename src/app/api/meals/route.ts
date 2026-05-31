@@ -5,7 +5,6 @@ import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
 import { MealPostSchema, zodFirstError } from "@/lib/validation";
 
-// GET /api/meals?month=5&year=2026
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -22,7 +21,7 @@ export async function GET(req: NextRequest) {
   const year = parseInt(searchParams.get("year") ?? String(new Date().getFullYear()));
 
   const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   const meals = await prisma.mealCount.findMany({
     where: { 
@@ -40,7 +39,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(meals);
 }
 
-// POST /api/meals — add or update meal count for a day
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -60,7 +58,6 @@ export async function POST(req: NextRequest) {
 
   const { memberId, date, breakfast, lunch, dinner } = parsed.data;
 
-  // Members can only update their own meals; admins/moderators can update anyone's
   if (!messContext.canManage) {
     const member = await prisma.member.findUnique({
       where: { id: memberId, messId: messContext.messId },
@@ -71,7 +68,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Normalize to midnight UTC — avoids timezone shifts between dev (UTC+6) and Vercel (UTC)
   const rawDate = new Date(date);
   const parsedDate = new Date(Date.UTC(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate()));
 

@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getMessContext } from "@/lib/mess-context";
 import { calculateMonthly } from "@/lib/calculations";
@@ -10,10 +11,14 @@ import {
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { NoticeBoard } from "@/components/dashboard/notice-board";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const messContext = await getMessContext();
-  if (!messContext) return null;
+  if (!messContext) {
+    redirect("/select-mess");
+  }
 
   const now = new Date();
   const month = now.getMonth() + 1;
@@ -27,7 +32,7 @@ export default async function DashboardPage() {
   const member = await prisma.member.findUnique({ 
     where: { 
       userId_messId: { 
-        userId: session!.user.id,
+        userId: session?.user?.id ?? "",
         messId: messContext.messId 
       } 
     } 
@@ -36,7 +41,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page title — desktop only */}
       <div className="hidden md:block">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">{getMonthName(month)} {year} overview</p>
@@ -44,7 +48,6 @@ export default async function DashboardPage() {
 
       <NoticeBoard />
 
-      {/* ── Status Card: Highlights what the user needs to know ── */}
       {mySummary && (
         <div className={`rounded-2xl border p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm ${
           mySummary.due > 0 
@@ -81,7 +84,6 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* ── Desktop: 5-stat grid ── */}
       <div className="hidden md:grid md:grid-cols-5 md:gap-4">
         {[
           { label: "Total Cost", value: formatCurrency(calc.totalCost), icon: ShoppingBasket, color: "text-primary", bg: "bg-primary/10", desc: `${getMonthName(month)} ${year}` },
@@ -113,9 +115,7 @@ export default async function DashboardPage() {
         })}
       </div>
 
-      {/* ── Desktop: two-column layout ── */}
       <div className="hidden md:grid md:grid-cols-3 md:gap-6">
-        {/* Left: member dues table */}
         {session?.user.role === "ADMIN" && calc.memberSummaries.length > 0 && (
           <div className="md:col-span-2 rounded-xl border bg-card">
             <div className="border-b px-5 py-4">
@@ -168,7 +168,6 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Right: my summary + quick stats */}
         <div className="space-y-4">
           {mySummary && (
             <div className="rounded-xl border bg-card p-5">
@@ -229,11 +228,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════
-          MOBILE layout (hidden on md+)
-      ══════════════════════════════════════════ */}
       <div className="space-y-5 md:hidden">
-        {/* Hero card */}
         <div className="rounded-2xl bg-gradient-to-br from-primary to-blue-600 p-5 text-primary-foreground">
           <p className="text-sm font-medium opacity-80">{getMonthName(month)} {year}</p>
           <p className="mt-1 text-3xl font-bold">{formatCurrency(calc.totalCost)}</p>
@@ -252,7 +247,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Mess Balance card */}
         <div className={`rounded-2xl border p-4 ${calc.messBalance >= 0 ? "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800" : "bg-red-50 border-red-200 dark:bg-red-950/50 dark:border-red-800"}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -348,7 +342,6 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Premium Graphical Analytics Section */}
       <div className="pt-4 border-t">
         <h2 className="text-lg font-bold mb-4">Analytics & Trends</h2>
         <DashboardCharts

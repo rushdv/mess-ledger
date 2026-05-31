@@ -101,7 +101,7 @@ export const SharedCostPostSchema = z.object({
   date: dateString.optional(),
 });
 
-// ── Helper: extract first error message from Zod v4 result ──────
-export function zodFirstError(result: z.ZodSafeParseError<unknown>): string {
+// ── Helper: extract first error message from Zod result ──────
+export function zodFirstError(result: { success: false; error: { issues: Array<{ message?: string }> } }): string {
   return result.error.issues[0]?.message ?? "Invalid input";
 }

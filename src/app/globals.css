@@ -50,72 +50,72 @@
   }
 
   .orange {
-    /* Ember — deep dark orange/amber */
-    --background: 20 25% 7%;
-    --foreground: 35 30% 92%;
-    --card: 20 22% 11%;
-    --card-foreground: 35 30% 92%;
-    --popover: 20 22% 11%;
-    --popover-foreground: 35 30% 92%;
-    --primary: 28 100% 55%;
-    --primary-foreground: 20 15% 8%;
-    --secondary: 24 22% 18%;
-    --secondary-foreground: 35 30% 92%;
-    --muted: 24 18% 14%;
-    --muted-foreground: 30 20% 58%;
-    --accent: 24 22% 20%;
-    --accent-foreground: 35 30% 92%;
-    --destructive: 0 80% 55%;
+    /* Ember — refined warm dark with amber accents */
+    --background: 30 10% 8%;
+    --foreground: 35 20% 90%;
+    --card: 30 8% 12%;
+    --card-foreground: 35 20% 90%;
+    --popover: 30 8% 12%;
+    --popover-foreground: 35 20% 90%;
+    --primary: 28 90% 52%;
+    --primary-foreground: 30 10% 98%;
+    --secondary: 30 10% 16%;
+    --secondary-foreground: 35 20% 90%;
+    --muted: 30 8% 15%;
+    --muted-foreground: 30 12% 55%;
+    --accent: 28 60% 22%;
+    --accent-foreground: 35 20% 90%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 24 18% 22%;
-    --input: 24 18% 18%;
-    --ring: 28 100% 55%;
+    --border: 30 8% 20%;
+    --input: 30 8% 14%;
+    --ring: 28 90% 52%;
   }
 
   .blue {
-    /* Ocean — deep navy with electric blue accents */
-    --background: 222 35% 7%;
-    --foreground: 210 30% 93%;
-    --card: 222 32% 11%;
-    --card-foreground: 210 30% 93%;
-    --popover: 222 32% 11%;
-    --popover-foreground: 210 30% 93%;
-    --primary: 213 94% 62%;
-    --primary-foreground: 222 35% 8%;
-    --secondary: 218 25% 18%;
-    --secondary-foreground: 210 30% 93%;
-    --muted: 220 22% 14%;
-    --muted-foreground: 215 20% 58%;
-    --accent: 218 25% 20%;
-    --accent-foreground: 210 30% 93%;
-    --destructive: 0 78% 55%;
+    /* Ocean — deep slate navy with crisp blue accents */
+    --background: 222 25% 9%;
+    --foreground: 215 25% 90%;
+    --card: 222 20% 13%;
+    --card-foreground: 215 25% 90%;
+    --popover: 222 20% 13%;
+    --popover-foreground: 215 25% 90%;
+    --primary: 215 85% 58%;
+    --primary-foreground: 222 25% 98%;
+    --secondary: 220 16% 17%;
+    --secondary-foreground: 215 25% 90%;
+    --muted: 220 14% 16%;
+    --muted-foreground: 218 14% 55%;
+    --accent: 215 50% 22%;
+    --accent-foreground: 215 25% 90%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 22% 21%;
-    --input: 220 22% 18%;
-    --ring: 213 94% 62%;
+    --border: 220 14% 21%;
+    --input: 220 16% 15%;
+    --ring: 215 85% 58%;
   }
 
   .emerald {
-    /* Forest — deep dark green with vivid emerald accents */
-    --background: 155 30% 7%;
-    --foreground: 145 20% 92%;
-    --card: 155 28% 11%;
-    --card-foreground: 145 20% 92%;
-    --popover: 155 28% 11%;
-    --popover-foreground: 145 20% 92%;
-    --primary: 152 76% 48%;
-    --primary-foreground: 155 30% 7%;
-    --secondary: 150 22% 18%;
-    --secondary-foreground: 145 20% 92%;
-    --muted: 152 18% 14%;
-    --muted-foreground: 150 15% 58%;
-    --accent: 150 22% 20%;
-    --accent-foreground: 145 20% 92%;
-    --destructive: 0 78% 55%;
+    /* Forest — deep charcoal green with vivid emerald accents */
+    --background: 155 18% 8%;
+    --foreground: 150 15% 88%;
+    --card: 155 14% 12%;
+    --card-foreground: 150 15% 88%;
+    --popover: 155 14% 12%;
+    --popover-foreground: 150 15% 88%;
+    --primary: 155 65% 45%;
+    --primary-foreground: 155 18% 98%;
+    --secondary: 152 14% 16%;
+    --secondary-foreground: 150 15% 88%;
+    --muted: 152 12% 15%;
+    --muted-foreground: 152 10% 52%;
+    --accent: 155 40% 20%;
+    --accent-foreground: 150 15% 88%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 152 18% 21%;
-    --input: 152 18% 18%;
-    --ring: 152 76% 48%;
+    --border: 152 12% 20%;
+    --input: 152 14% 14%;
+    --ring: 155 65% 45%;
   }
 }
 

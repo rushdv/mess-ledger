@@ -33,7 +33,6 @@ export async function PATCH(
     return NextResponse.json({ error: "Request already processed" }, { status: 400 });
   }
 
-  // Transaction: Update request status and create actual BazarCost if approved
   const result = await prisma.$transaction(async (tx) => {
     const updatedRequest = await tx.expenseRequest.update({
       where: { id: params.id },
@@ -45,27 +44,12 @@ export async function PATCH(
 
     if (status === "APPROVED") {
       const date = new Date(request.date);
-      // Create BazarCost
       await tx.bazarCost.create({
         data: {
           messId: request.messId,
+          memberId: request.memberId,
           amount: request.amount,
           description: `[By ${request.member.user.name || 'Member'}] ${request.description}`,
-          month: date.getMonth() + 1,
-          year: date.getFullYear(),
-          date: date,
-          addedBy: session.user.id,
-        },
-      });
-
-      // Also create a payment (deposit) for this member, since they spent from their own pocket
-      // In a mess ledger, if a member pays for bazar, they get credited for that amount
-      await tx.payment.create({
-        data: {
-          memberId: request.memberId,
-          messId: request.messId,
-          amount: request.amount,
-          note: `Auto-credited for Bazar Expense: ${request.description}`,
           month: date.getMonth() + 1,
           year: date.getFullYear(),
           date: date,

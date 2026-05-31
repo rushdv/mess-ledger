@@ -11,22 +11,23 @@ export async function GET() {
   const messContext = await getMessContext();
   if (!messContext) return NextResponse.json({ error: "No mess selected" }, { status: 400 });
 
-  // Only admins need to see the total pending count
-  // Members only see their own pending requests if we want to show that too
-  
+  const memberFilter = messContext.canManage
+    ? {}
+    : { memberId: messContext.memberId ?? "__no_member__" };
+
   const [paymentCount, expenseCount] = await Promise.all([
     prisma.paymentRequest.count({
       where: {
         messId: messContext.messId,
         status: "PENDING",
-        ...(messContext.canManage ? {} : { memberId: messContext.memberId || "" }),
+        ...memberFilter,
       },
     }),
     prisma.expenseRequest.count({
       where: {
         messId: messContext.messId,
         status: "PENDING",
-        ...(messContext.canManage ? {} : { memberId: messContext.memberId || "" }),
+        ...memberFilter,
       },
     }),
   ]);

@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { ClipboardList, Badge } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 const navItems = [
