@@ -127,6 +127,10 @@
     @apply bg-background text-foreground;
     /* Prevent text size adjustment on mobile */
     -webkit-text-size-adjust: 100%;
+    /* Prevent bounce scroll on mobile PWA */
+    overscroll-behavior-y: none;
+    /* Disable blue tap highlight on mobile */
+    -webkit-tap-highlight-color: transparent;
   }
   /* Safe area for notched phones */
   .pb-safe {
