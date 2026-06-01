@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -7,9 +6,28 @@ import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
+import type { Viewport, Metadata } from "next";
+
 export const metadata: Metadata = {
   title: "MessLedger — Mess Expense Tracker",
   description: "Track meals, bazar costs, utilities, and dues for your mess",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MessLedger",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
