@@ -87,9 +87,9 @@ export default async function DashboardPage() {
       <div className="hidden md:grid md:grid-cols-5 md:gap-4">
         {[
           { label: "Total Cost", value: formatCurrency(calc.totalCost), icon: ShoppingBasket, color: "text-primary", bg: "bg-primary/10", desc: `${getMonthName(month)} ${year}` },
-          { label: "Total Meals", value: calc.totalMeals.toString(), icon: UtensilsCrossed, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950", desc: `৳${Number(calc.mealRate).toFixed(2)}/meal` },
-          { label: "Bazar Cost", value: formatCurrency(calc.totalBazarCost), icon: ShoppingBasket, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950", desc: "Grocery expenses" },
-          { label: "Utility", value: formatCurrency(calc.totalUtility), icon: Zap, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-950", desc: `${formatCurrency(Number(calc.utilityPerHead))}/member` },
+          { label: "Total Meals", value: calc.totalMeals.toString(), icon: UtensilsCrossed, color: "text-primary/90", bg: "bg-primary/10", desc: `৳${Number(calc.mealRate).toFixed(2)}/meal` },
+          { label: "Bazar Cost", value: formatCurrency(calc.totalBazarCost), icon: ShoppingBasket, color: "text-primary/80", bg: "bg-primary/10", desc: "Grocery expenses" },
+          { label: "Utility", value: formatCurrency(calc.totalUtility), icon: Zap, color: "text-primary/70", bg: "bg-primary/10", desc: `${formatCurrency(Number(calc.utilityPerHead))}/member` },
           {
             label: "Mess Balance",
             value: (calc.messBalance >= 0 ? "+" : "") + formatCurrency(calc.messBalance),
@@ -229,7 +229,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="space-y-5 md:hidden">
-        <div className="rounded-2xl bg-gradient-to-br from-primary to-blue-600 p-5 text-primary-foreground">
+        <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/60 p-5 text-primary-foreground">
           <p className="text-sm font-medium opacity-80">{getMonthName(month)} {year}</p>
           <p className="mt-1 text-3xl font-bold">{formatCurrency(calc.totalCost)}</p>
           <p className="mt-1 text-sm opacity-80">Total mess cost this month</p>
@@ -297,8 +297,8 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Bazar", value: formatCurrency(calc.totalBazarCost), icon: ShoppingBasket, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950" },
-            { label: "Utility", value: formatCurrency(calc.totalUtility), icon: Zap, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-950" },
+            { label: "Bazar", value: formatCurrency(calc.totalBazarCost), icon: ShoppingBasket, color: "text-primary/80", bg: "bg-primary/10" },
+            { label: "Utility", value: formatCurrency(calc.totalUtility), icon: Zap, color: "text-primary/70", bg: "bg-primary/10" },
           ].map((s) => {
             const Icon = s.icon;
             return (

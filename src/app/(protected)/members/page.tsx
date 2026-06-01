@@ -383,7 +383,7 @@ export default function MembersPage() {
 
           {/* Stats sidebar */}
           <div className="space-y-4">
-            <div className="rounded-xl bg-gradient-to-br from-primary to-blue-600 p-5 text-primary-foreground">
+            <div className="rounded-xl bg-gradient-to-br from-primary to-primary/60 p-5 text-primary-foreground">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
                 <Users className="h-5 w-5" />
               </div>

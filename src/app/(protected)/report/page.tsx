@@ -271,7 +271,7 @@ export default function ReportPage() {
 
         {loading ? Spinner : report ? (
           <>
-            <div className="rounded-2xl bg-gradient-to-br from-primary to-blue-600 p-5 text-primary-foreground">
+            <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/60 p-5 text-primary-foreground">
               <p className="text-sm opacity-80">{getMonthName(month)} {year} — Total Cost</p>
               <p className="mt-1 text-3xl font-bold">{formatCurrency(report.totalCost)}</p>
               <div className="mt-4 grid grid-cols-2 gap-3">
