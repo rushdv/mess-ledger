@@ -70,27 +70,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const demoMess = await prisma.mess.findFirst({
-      where: { code: "DEMO2024" },
-    });
-
-    if (demoMess) {
-      await prisma.messMember.create({
-        data: {
-          userId: user.id,
-          messId: demoMess.id,
-          role: "MEMBER",
-        },
-      });
-
-      await prisma.member.create({
-        data: {
-          userId: user.id,
-          messId: demoMess.id,
-        },
-      });
-    }
-
     return NextResponse.json(
       {
         success: true,

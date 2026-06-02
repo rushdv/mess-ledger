@@ -93,36 +93,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async signIn({ user, account }) {
-      if (account?.provider === "google" && user.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email },
-          include: { messMembers: true },
-        });
-
-        if (dbUser && dbUser.messMembers.length === 0) {
-          const demoMess = await prisma.mess.findFirst({
-            where: { code: "DEMO2024" },
-          });
-
-          if (demoMess) {
-            await prisma.messMember.create({
-              data: {
-                userId: dbUser.id,
-                messId: demoMess.id,
-                role: "MEMBER",
-              },
-            });
-
-            await prisma.member.create({
-              data: {
-                userId: dbUser.id,
-                messId: demoMess.id,
-              },
-            });
-          }
-        }
-      }
+    async signIn() {
       return true;
     },
   },
