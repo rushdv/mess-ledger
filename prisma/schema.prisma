@@ -21,10 +21,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  messMembers MessMember[]
-  member      Member[]
+  accounts      Account[]
+  sessions      Session[]
+  messMembers   MessMember[]
+  member        Member[]
+  adminLogs     AdminAuditLog[]
 }
 
 model Account {
@@ -330,4 +331,16 @@ model Notice {
   expiresAt DateTime?
 
   mess Mess @relation(fields: [messId], references: [id], onDelete: Cascade)
+}
+
+// ─── Super Admin ─────────────────────────────────────────────────────────────
+
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
