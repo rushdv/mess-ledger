@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";

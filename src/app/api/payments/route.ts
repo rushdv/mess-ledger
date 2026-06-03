@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 
