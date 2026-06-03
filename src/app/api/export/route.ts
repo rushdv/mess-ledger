@@ -1,13 +1,14 @@
+import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { getMessContext } from "@/lib/mess-context";
 import { calculateMonthly } from "@/lib/calculations";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const messContext = await getMessContext();

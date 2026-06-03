@@ -1,13 +1,14 @@
+import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
 import { PaymentPostSchema, zodFirstError } from "@/lib/validation";
 
 // GET /api/payments?month=5&year=2026
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/payments — record a payment (single or bulk, admin only)
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/payments?id=xxx (admin or moderator)
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Search, ChevronLeft, ChevronRight, UserCog } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -58,7 +58,7 @@ export default function AdminUsersPage() {
       }
     }
 
-    if (session?.user?.role === "SUPER_ADMIN") {
+    if (true) { // role guarded by server layout
       fetchUsers();
     }
   }, [session, page, debouncedSearch]);

@@ -1,12 +1,10 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { getMessContext } from "@/lib/mess-context";
 import { Sidebar } from "@/components/layout/sidebar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { TopBar } from "@/components/layout/top-bar";
 
-// Force dynamic rendering — these pages read cookies (NextAuth session) at request time
 export const dynamic = "force-dynamic";
 
 export default async function ProtectedLayout({
@@ -14,12 +12,11 @@ export default async function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     redirect("/login");
   }
 
-  // Check if user has selected a mess
   const messContext = await getMessContext();
   if (!messContext) {
     redirect("/select-mess");

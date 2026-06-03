@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession, signOut } from "@/lib/auth-client";
 import {
   LayoutDashboard,
   Building2,
@@ -25,7 +25,13 @@ const adminNavItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data } = useSession();
+  const user = data?.user;
+
+  async function handleSignOut() {
+    await signOut({ fetchOptions: { onSuccess: () => router.push("/login") } });
+  }
 
   return (
     <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-card">
@@ -71,23 +77,23 @@ export function AdminSidebar() {
           <Home className="h-4 w-4" />
           Exit Admin
         </Link>
-        
+
         <div className="flex items-center gap-3 rounded-lg px-3 py-2 bg-muted/50">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-            {session?.user?.name?.[0]?.toUpperCase() ?? "A"}
+            {user?.name?.[0]?.toUpperCase() ?? "A"}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">{session?.user?.name}</p>
+            <p className="truncate text-sm font-medium text-foreground">{user?.name}</p>
             <p className="truncate text-xs text-muted-foreground">Super Admin</p>
           </div>
         </div>
-        
+
         <div className="px-3">
           <ThemeToggle />
         </div>
 
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={handleSignOut}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
         >
           <LogOut className="h-4 w-4" />

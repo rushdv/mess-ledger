@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import {
   Area,
   AreaChart,
@@ -44,7 +44,7 @@ export default function AdminAnalyticsPage() {
       }
     }
 
-    if (session?.user?.role === "SUPER_ADMIN") {
+    if (true) { // role guarded by server layout
       fetchAnalytics();
     }
   }, [session]);

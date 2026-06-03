@@ -1,13 +1,14 @@
+import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { getMessContext } from "@/lib/mess-context";
 import { prisma } from "@/lib/prisma";
 import { SharedCostPostSchema, zodFirstError } from "@/lib/validation";
 
 // GET /api/shared-cost?month=5&year=2026
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/shared-cost — add shared cost (admin only)
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/shared-cost?id=xxx (admin or moderator)
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

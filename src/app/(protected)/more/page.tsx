@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut } from "@/lib/auth-client";
 import { useMessContext } from "@/hooks/use-mess-context";
 import { Zap, CreditCard, Users, LogOut, ChevronRight, Receipt, Share2, Sun, Moon, Monitor, Building2, BookOpen, Flame, Droplet, Leaf } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -25,7 +25,8 @@ const themeOptions = [
 ] as const;
 
 export default function MorePage() {
-  const { data: session } = useSession();
+  const { data } = useSession();
+  const session = data;
   const { messContext } = useMessContext();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -144,7 +145,7 @@ export default function MorePage() {
         </Link>
         
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
           className="flex w-full items-center gap-4 p-4 text-destructive transition-colors hover:bg-destructive/5 active:bg-destructive/10"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">

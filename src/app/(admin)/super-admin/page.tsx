@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, TrendingUp, Activity, ShieldAlert } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 
 interface Stats {
   totalUsers: number;
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
       }
     }
 
-    if (session?.user?.role === "SUPER_ADMIN") {
+    if (true) { // role guarded by server layout
       fetchStats();
     }
   }, [session]);

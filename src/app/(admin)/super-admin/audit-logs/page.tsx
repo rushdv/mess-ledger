@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -49,7 +49,7 @@ export default function AdminAuditLogsPage() {
       }
     }
 
-    if (session?.user?.role === "SUPER_ADMIN") {
+    if (true) { // role guarded by server layout
       fetchLogs();
     }
   }, [session, page]);

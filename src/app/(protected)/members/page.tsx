@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useMessContext } from "@/hooks/use-mess-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,8 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { messContext } = useMessContext();
-  const { data: session } = useSession();
+  const { data } = useSession();
+  const currentUserId = data?.user?.id;
   
   // Use mess-specific role
   const isMessAdmin = messContext?.isMessAdmin ?? false;
@@ -256,7 +257,7 @@ export default function MembersPage() {
     const isAdmin = member.messRole === "ADMIN";
     const isModerator = member.messRole === "MODERATOR";
     const canChangeRole = isMessAdmin && !isAdmin; 
-    const canEditDefaults = isMessAdmin || member.user.id === session?.user?.id;
+    const canEditDefaults = isMessAdmin || member.user.id === currentUserId;
     
     return (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 md:px-5 md:py-4 gap-4">

@@ -1,14 +1,13 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export interface MessContext {
   messId: string;
   messName: string;
   messCode: string;
   userId: string;
-  memberId: string | null; // The Member.id for this user in this mess
+  memberId: string | null;
   userRole: string; // ADMIN | MODERATOR | MEMBER in this mess
   isMessAdmin: boolean;
   isMessModerator: boolean;
@@ -16,49 +15,30 @@ export interface MessContext {
 }
 
 /**
- * Get the current mess context for the logged-in user
- * Reads from cookie "selectedMessId" or returns first mess if not set
+ * Get the current mess context for the logged-in user.
+ * Reads from cookie "selectedMessId" or returns first mess if not set.
  */
 export async function getMessContext(): Promise<MessContext | null> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return null;
-  }
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user?.id) return null;
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const selectedMessId = cookieStore.get("selectedMessId")?.value;
 
-  // Find user's mess memberships
   const messMembers = await prisma.messMember.findMany({
-    where: {
-      userId: session.user.id,
-      isActive: true,
-    },
-    include: {
-      mess: true,
-    },
-    orderBy: {
-      joinedAt: "desc",
-    },
+    where: { userId: session.user.id, isActive: true },
+    include: { mess: true },
+    orderBy: { joinedAt: "desc" },
   });
 
-  if (messMembers.length === 0) {
-    return null;
-  }
+  if (messMembers.length === 0) return null;
 
-  // Use selected mess or first mess
   let messMember = messMembers.find((mm) => mm.messId === selectedMessId);
-  if (!messMember) {
-    messMember = messMembers[0];
-  }
+  if (!messMember) messMember = messMembers[0];
 
-  // Look up the Member record for this user in this mess
   const member = await prisma.member.findUnique({
     where: {
-      userId_messId: {
-        userId: session.user.id,
-        messId: messMember.messId,
-      },
+      userId_messId: { userId: session.user.id, messId: messMember.messId },
     },
     select: { id: true },
   });
@@ -77,25 +57,16 @@ export async function getMessContext(): Promise<MessContext | null> {
 }
 
 /**
- * Get all messes the user is a member of
+ * Get all messes the user is a member of.
  */
 export async function getUserMesses() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return [];
-  }
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user?.id) return [];
 
   const messMembers = await prisma.messMember.findMany({
-    where: {
-      userId: session.user.id,
-      isActive: true,
-    },
-    include: {
-      mess: true,
-    },
-    orderBy: {
-      joinedAt: "desc",
-    },
+    where: { userId: session.user.id, isActive: true },
+    include: { mess: true },
+    orderBy: { joinedAt: "desc" },
   });
 
   return messMembers.map((mm) => ({

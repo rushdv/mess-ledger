@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { UtensilsCrossed } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
@@ -19,7 +19,8 @@ const pageTitles: Record<string, string> = {
 
 export function TopBar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data } = useSession();
+  const user = data?.user;
   const title = pageTitles[pathname] ?? "MessLedger";
 
   return (
@@ -32,7 +33,7 @@ export function TopBar() {
           <span className="font-semibold">{title}</span>
         </div>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-          {session?.user?.name?.[0]?.toUpperCase() ?? "?"}
+          {user?.name?.[0]?.toUpperCase() ?? "?"}
         </div>
       </div>
     </header>

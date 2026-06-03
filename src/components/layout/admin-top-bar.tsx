@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { ShieldAlert, Menu, Home } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Link from "next/link";
@@ -26,7 +26,8 @@ const pageTitles: Record<string, string> = {
 
 export function AdminTopBar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data } = useSession();
+  const user = data?.user;
   const title = pageTitles[pathname] ?? "Admin Portal";
 
   return (
@@ -77,7 +78,7 @@ export function AdminTopBar() {
           <span className="font-semibold">{title}</span>
         </div>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-          {session?.user?.name?.[0]?.toUpperCase() ?? "A"}
+          {user?.name?.[0]?.toUpperCase() ?? "A"}
         </div>
       </div>
     </header>

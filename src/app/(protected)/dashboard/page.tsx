@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getMessContext } from "@/lib/mess-context";
@@ -14,7 +13,7 @@ import { NoticeBoard } from "@/components/dashboard/notice-board";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   const messContext = await getMessContext();
   if (!messContext) {
     redirect("/select-mess");

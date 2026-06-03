@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useMessContext } from "@/hooks/use-mess-context";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, getMonthName } from "@/lib/utils";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useMessContext } from "@/hooks/use-mess-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ interface MealEntry {
 type MealMap = Record<string, Record<string, MealEntry>>;
 
 export default function MealsPage() {
-  const { data: session } = useSession();
+  const { data } = useSession();
   const { messContext } = useMessContext();
   
   // Use mess-specific role
