@@ -4,111 +4,86 @@
 
 ### Complete Mess Management System
 
-*Track meals, expenses, bills, and payments - all in one place*
+*Track meals, expenses, bills, and payments — all in one place*
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![Better Auth](https://img.shields.io/badge/Better_Auth-1.x-8B5CF6?style=for-the-badge)](https://better-auth.com/)
 
-[Features](#-features) • [Demo](#-demo) • [Quick Start](#-quick-start) • [Tech Stack](#-tech-stack) • [Documentation](#-documentation)
+[Features](#-features) • [Screenshots](#-screenshots) • [Quick Start](#-quick-start) • [Tech Stack](#-tech-stack) • [Deployment](#-deployment)
+
+🔗 **[Live Demo](https://messledger-pi.vercel.app)**
 
 </div>
 
 ---
 
-## 🌟 Features
-
-### 📊 Core Functionality
+## ✨ Features
 
 <table>
 <tr>
 <td width="50%">
 
-#### 🍽️ **Meal Tracking**
-- Daily breakfast, lunch, dinner count
-- Per-member meal history
+#### 🍽️ Meal Tracking
+- Daily breakfast, lunch & dinner counts
+- Per-member history with monthly overview
 - Automatic meal rate calculation
-- Month-wise summaries
 
-#### 🛒 **Bazar Management**
-- Daily grocery expense tracking
-- Date-wise entries
-- Description support
+#### 🛒 Bazar Management
+- Daily grocery expense entries
+- Date-wise records with descriptions
 - Total cost overview
 
-#### ⚡ **Utility Bills**
-- Electricity, Gas, Water, Internet
-- Dust bill tracking
-- Type-wise categorization
-- Monthly bill summaries
+#### ⚡ Utility Bills
+- Electricity, gas, water, internet & more
+- Monthly bill summaries per category
+
+#### 💰 Payment Tracking
+- Member deposit records
+- Payment history with date-wise view
 
 </td>
 <td width="50%">
 
-#### 💰 **Payment Tracking**
-- Member deposit records
-- Payment history
-- Date-wise tracking
-- Total collection view
-
-#### 📈 **Smart Reports**
-- Auto-calculated monthly dues
-- Per-member breakdown
-- PDF export functionality
+#### 📈 Smart Reports
+- Auto-calculated monthly dues per member
+- Mess balance (surplus / deficit)
+- PDF & Excel export
 - Visual charts & graphs
 
-#### 👥 **Member Management**
-- Role-based access control
+#### 👥 Member Management
 - Admin, Moderator, Member roles
-- Active/Inactive status
-- Profile management
+- Default meal settings per member
+- Auto meal generation from defaults
+
+#### 🏢 Multi-Mess Support
+- Create or join multiple mess groups
+- Unique invite codes
+- Easy switching between messes
 
 </td>
 </tr>
 </table>
 
-### � Advanced Features
-
-- **🏢 Multi-Tenancy** - Create or join multiple mess groups
-- **🔐 Secure Authentication** - Email/Password + Google OAuth
-- **📱 Responsive Design** - Works on desktop, tablet, and mobile
-- **🌙 Dark Mode** - Eye-friendly dark theme support
-- **📄 PDF Export** - Download monthly reports as PDF
-- **💾 Data Isolation** - Each mess has completely separate data
-- **🎨 Modern UI** - Beautiful interface with shadcn/ui components
-- **⚡ Real-time Updates** - Instant data synchronization
+**More:** Individual costs · Shared costs · Payment requests · Expense requests · Notice board · Dark mode · 5 color themes · PWA support · Fully responsive
 
 ---
 
-## 🎬 Demo
-
-### Screenshots
+## 📸 Screenshots
 
 <div align="center">
 
-| 📊 Dashboard (Desktop) | 📈 Monthly Report (Desktop) |
-|-----------------------|----------------------------|
+| Dashboard (Desktop) | Monthly Report (Desktop) |
+|---|---|
 | ![Dashboard Desktop](./public/dashboard-desktop.png) | ![Report Desktop](./public/report-desktop.png) |
 
-| 📱 Dashboard (Mobile) | 🍽️ Meals Entry (Mobile) |
-|---------------------|------------------------|
+| Dashboard (Mobile) | Meals Entry (Mobile) |
+|---|---|
 | ![Dashboard Mobile](./public/dashboard-mobile.png) | ![Meals Mobile](./public/meals-mobile.png) |
 
-| 📊 Monthly Report (Mobile) | ⚙️ More & Settings (Mobile) |
-|---------------------------|----------------------------|
-| ![Report Mobile](./public/report-mobile.png) | ![More Mobile](./public/more-mobile.png) |
-
 </div>
-
-### Live Demo
-
-🔗 **[Try Live Demo](https://mess-ledger.vercel.app)** *(Coming Soon)*
-
-**Demo Credentials:**
-- Email: `admin@messledger.com`
-- Password: `admin123`
-- Mess Code: `DEMO2024`
 
 ---
 
@@ -116,8 +91,8 @@
 
 ### Prerequisites
 
-- Node.js 18+ installed
-- npm or yarn package manager
+- Node.js 18+
+- PostgreSQL database (or [Neon](https://neon.tech) free tier)
 
 ### Installation
 
@@ -131,53 +106,57 @@ npm install
 
 # 3. Set up environment variables
 cp .env.example .env
-# Edit .env and add your NEXTAUTH_SECRET:
-# openssl rand -base64 32
+# Fill in the values — see Environment Variables section below
 
-# 4. Set up database
-npm run db:push      # Create database schema
-npm run db:seed      # Seed with demo data
+# 4. Push database schema
+npm run db:push
 
-# 5. Start development server
+# 5. (Optional) Seed with demo data
+npm run db:seed
+
+# 6. Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser 🎉
+Open [http://localhost:3000](http://localhost:3000) 🎉
 
-### Default Login Credentials
+---
 
-After seeding, you can login with:
+## 🔧 Environment Variables
 
-| Role | Email | Password |
-|------|-------|----------|
-| **Admin** | admin@messledger.com | admin123 |
-| Member | rahim@messledger.com | member123 |
-| Member | karim@messledger.com | member123 |
+```env
+# Database (PostgreSQL)
+DATABASE_URL="postgresql://user:password@host:port/database"
+DIRECT_URL="postgresql://user:password@host:port/database"
 
-**Demo Mess Code:** `DEMO2024`
+# Better Auth
+BETTER_AUTH_SECRET="your-secret"        # openssl rand -base64 32
+BETTER_AUTH_URL="http://localhost:3000" # Your app URL
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# App URL
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+```
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **[Next.js 14](https://nextjs.org/)** - React framework with App Router
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
-- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[shadcn/ui](https://ui.shadcn.com/)** - Beautiful UI components
-- **[Recharts](https://recharts.org/)** - Chart library for data visualization
-- **[Lucide Icons](https://lucide.dev/)** - Beautiful icon set
-
-### Backend
-- **[Prisma ORM](https://www.prisma.io/)** - Type-safe database ORM
-- **[NextAuth.js](https://next-auth.js.org/)** - Authentication solution
-- **[SQLite](https://www.sqlite.org/)** - Development database
-- **[PostgreSQL](https://www.postgresql.org/)** - Production database
-
-### Tools & Libraries
-- **[jsPDF](https://github.com/parallax/jsPDF)** - PDF generation
-- **[date-fns](https://date-fns.org/)** - Date utility library
-- **[Zod](https://zod.dev/)** - Schema validation
+| Layer | Technology |
+|---|---|
+| Framework | [Next.js 14](https://nextjs.org/) (App Router) |
+| Language | [TypeScript](https://www.typescriptlang.org/) |
+| Styling | [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) |
+| Auth | [Better Auth](https://better-auth.com/) |
+| ORM | [Prisma](https://www.prisma.io/) |
+| Database | PostgreSQL ([Neon](https://neon.tech/)) |
+| Charts | [Recharts](https://recharts.org/) |
+| PDF Export | [jsPDF](https://github.com/parallax/jsPDF) |
+| PWA | [Serwist](https://serwist.pages.dev/) |
+| Deployment | [Vercel](https://vercel.com/) |
 
 ---
 
@@ -187,163 +166,113 @@ After seeding, you can login with:
 mess-ledger/
 ├── src/
 │   ├── app/
-│   │   ├── (protected)/          # Protected routes (requires auth)
-│   │   │   ├── dashboard/        # Main dashboard
-│   │   │   ├── meals/            # Meal tracking
-│   │   │   ├── bazar/            # Grocery expenses
-│   │   │   ├── utility/          # Utility bills
-│   │   │   ├── payments/         # Payment records
-│   │   │   ├── individual-cost/  # Personal expenses
-│   │   │   ├── shared-cost/      # Shared expenses
-│   │   │   ├── report/           # Monthly reports
-│   │   │   ├── members/          # Member management
-│   │   │   ├── help/             # User guide
-│   │   │   └── more/             # Settings & more
-│   │   ├── api/                  # API routes
-│   │   │   ├── auth/             # Authentication
-│   │   │   ├── mess/             # Mess management
-│   │   │   └── [features]/       # Feature APIs
-│   │   ├── login/                # Login page
-│   │   ├── select-mess/          # Mess selection
-│   │   └── layout.tsx            # Root layout
+│   │   ├── (protected)/       # Auth-protected routes
+│   │   │   ├── dashboard/
+│   │   │   ├── meals/
+│   │   │   ├── bazar/
+│   │   │   ├── utility/
+│   │   │   ├── payments/
+│   │   │   ├── individual-cost/
+│   │   │   ├── shared-cost/
+│   │   │   ├── report/
+│   │   │   ├── members/
+│   │   │   ├── requests/
+│   │   │   └── more/
+│   │   ├── (admin)/           # Super admin panel
+│   │   ├── api/               # API routes
+│   │   ├── login/
+│   │   ├── register/
+│   │   └── select-mess/
 │   ├── components/
-│   │   ├── ui/                   # UI components (shadcn)
-│   │   ├── layout/               # Layout components
-│   │   └── [feature]/            # Feature components
-│   ├── lib/
-│   │   ├── prisma.ts             # Prisma client
-│   │   ├── auth.ts               # Auth configuration
-│   │   ├── mess-context.ts       # Multi-tenancy helper
-│   │   ├── calculations.ts       # Calculation engine
-│   │   ├── pdf-export.ts         # PDF generation
-│   │   └── utils.ts              # Utility functions
-│   ├── hooks/                    # Custom React hooks
-│   └── types/                    # TypeScript types
+│   │   ├── ui/                # shadcn/ui components
+│   │   └── layout/            # Layout components
+│   └── lib/
+│       ├── auth.ts            # Better Auth config
+│       ├── auth-client.ts     # Client-side auth
+│       ├── session.ts         # Server-side session helper
+│       ├── mess-context.ts    # Multi-tenancy helper
+│       ├── calculations.ts    # Calculation engine
+│       └── prisma.ts
 ├── prisma/
-│   ├── schema.prisma             # Database schema
-│   └── seed.ts                   # Database seeder
-├── public/                       # Static assets
-└── [config files]                # Configuration files
+│   ├── schema.prisma
+│   └── seed.ts
+└── public/
 ```
 
 ---
 
-## � How It Works
-
-### Calculation Logic
-
-```typescript
-// Monthly calculation formula
-meal_rate = total_bazar_cost / total_meals
-utility_per_head = total_utility / active_members
-
-// Per member calculation
-member_meal_cost = member_meals × meal_rate
-member_utility = utility_per_head
-member_individual = sum(individual_costs)
-member_shared = sum(shared_costs) / shared_members
-
-member_total = member_meal_cost + member_utility + member_individual + member_shared
-member_due = member_total - member_paid
-```
-
-### Multi-Tenancy Architecture
-
-- **Mess-based isolation** - Each mess is a separate tenant
-- **Row-level security** - All queries filtered by `messId`
-- **Unique invite codes** - Share codes to invite members
-- **Role-based access** - Admin, Moderator, Member roles
-- **Easy switching** - Users can be in multiple messes
-
----
-
-## 🔐 User Roles & Permissions
+## 🔐 Roles & Permissions
 
 | Feature | Admin | Moderator | Member |
-|---------|:-----:|:---------:|:------:|
-| View Data | ✅ | ✅ | ✅ |
-| Add Meals | ✅ | ✅ | ❌ |
-| Add Bazar | ✅ | ✅ | ❌ |
-| Add Utility | ✅ | ✅ | ❌ |
-| Add Payments | ✅ | ✅ | ❌ |
-| Add Costs | ✅ | ✅ | ❌ |
-| View Reports | ✅ | ✅ | ✅ |
-| Export PDF | ✅ | ✅ | ✅ |
-| Manage Members | ✅ | ❌ | ❌ |
-| Change Roles | ✅ | ❌ | ❌ |
-| Delete Entries | ✅ | ✅ | ❌ |
+|---|:---:|:---:|:---:|
+| View data & reports | ✅ | ✅ | ✅ |
+| Export PDF / Excel | ✅ | ✅ | ✅ |
+| Add meals | ✅ | ✅ | ✅ |
+| Add bazar / utility / payments | ✅ | ✅ | ❌ |
+| Add individual / shared costs | ✅ | ✅ | ❌ |
+| Approve requests | ✅ | ✅ | ❌ |
+| Manage members | ✅ | ❌ | ❌ |
+| Change member roles | ✅ | ❌ | ❌ |
+
+---
+
+## ⚙️ How It Works
+
+### Cost Calculation
+
+```
+meal_rate        = total_bazar_cost / total_meals
+utility_per_head = total_utility / active_members
+
+member_total = (member_meals × meal_rate)
+             + utility_per_head
+             + individual_costs
+             + shared_costs / shared_member_count
+
+member_due = member_total − member_paid
+```
+
+### Multi-Tenancy
+
+Every mess is a fully isolated tenant. All data (meals, costs, payments) is scoped to a `messId`. Users can create multiple messes or join existing ones via invite code, and switch between them at any time.
 
 ---
 
 ## 🚢 Deployment
 
-### Deploy to Vercel (Recommended)
+### Vercel (Recommended)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/rushdv/mess-ledger)
 
-1. Click the button above or push to GitHub
-2. Import project in Vercel
-3. Add environment variables:
-   ```env
-   DATABASE_URL=postgresql://...
-   NEXTAUTH_SECRET=your-secret-here
-   NEXTAUTH_URL=https://your-app.vercel.app
-   GOOGLE_CLIENT_ID=optional
-   GOOGLE_CLIENT_SECRET=optional
+1. Push to GitHub and import in Vercel
+2. Add all environment variables in Vercel → Settings → Environment Variables
+3. Add Google OAuth redirect URI in Google Cloud Console:
    ```
-4. Update `prisma/schema.prisma` provider to `postgresql`
-5. Deploy!
+   https://your-app.vercel.app/api/auth/callback/google
+   ```
+4. Deploy
 
-### Other Platforms
+### Available Scripts
 
-- **Railway** - [Guide](./docs/RAILWAY_DEPLOY.md)
-- **Render** - [Guide](./docs/RENDER_DEPLOY.md)
-- **DigitalOcean** - [Guide](./docs/DO_DEPLOY.md)
-
----
-
-## 📚 Documentation
-
-- 📖 **[User Guide](./USER_GUIDE.md)** - Complete user manual in Bangla
-- 🚀 **[Quick Start](#-quick-start)** - Get started in 5 minutes
-- 🛠️ **[Tech Stack](#-tech-stack)** - Technologies used
-- 🔐 **[Permissions](#-user-roles--permissions)** - Role-based access
-- 🚢 **[Deployment](#-deployment)** - Deploy to production
+```bash
+npm run dev          # Start development server
+npm run build        # Production build
+npm run db:push      # Push schema to database
+npm run db:studio    # Open Prisma Studio
+npm run db:seed      # Seed demo data
+```
 
 ---
 
-## 🤝 Contributing
+## 📖 User Guide
 
-Contributions are welcome! Here's how you can help:
-
-1. 🍴 Fork the repository
-2. 🔨 Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. 💾 Commit your changes (`git commit -m 'Add amazing feature'`)
-4. 📤 Push to the branch (`git push origin feature/amazing-feature`)
-5. 🎉 Open a Pull Request
-
-### Development Guidelines
-
-- Follow TypeScript best practices
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
-- Follow the existing code style
+See **[USER_GUIDE.md](./USER_GUIDE.md)** for the complete user manual.
 
 ---
 
-## 🐛 Bug Reports & Feature Requests
+## 📄 License
 
-Found a bug or have a feature request? Please open an issue on GitHub:
-
-- 🐛 [Report a Bug](https://github.com/rushdv/mess-ledger/issues/new?labels=bug)
-- ✨ [Request a Feature](https://github.com/rushdv/mess-ledger/issues/new?labels=enhancement)
-
----
-
-## � License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](./LICENSE) for details.
 
 ---
 
@@ -357,27 +286,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) - The React Framework
-- [Prisma](https://www.prisma.io/) - Next-generation ORM
-- [shadcn/ui](https://ui.shadcn.com/) - Beautiful UI components
-- [Vercel](https://vercel.com/) - Deployment platform
-- All contributors who helped make this project better!
-
----
-
-## ⭐ Star History
-
-If you find this project useful, please consider giving it a star! ⭐
-
-[![Star History Chart](https://api.star-history.com/svg?repos=rushdv/mess-ledger&type=Date)](https://star-history.com/#rushdv/mess-ledger&Date)
-
----
-
 <div align="center">
 
-**Made with ❤️ for mess management**
+Made with ❤️ for mess management
 
 [⬆ Back to Top](#-mess-ledger)
 
