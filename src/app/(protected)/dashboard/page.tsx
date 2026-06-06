@@ -115,7 +115,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="hidden md:grid md:grid-cols-3 md:gap-6">
-        {session?.user.role === "ADMIN" && calc.memberSummaries.length > 0 && (
+        {messContext.canManage && calc.memberSummaries.length > 0 && (
           <div className="md:col-span-2 rounded-xl border bg-card">
             <div className="border-b px-5 py-4">
               <h2 className="font-semibold">Member Dues — {getMonthName(month)}</h2>
@@ -310,7 +310,7 @@ export default async function DashboardPage() {
           })}
         </div>
 
-        {session?.user.role === "ADMIN" && calc.memberSummaries.length > 0 && (
+        {messContext.canManage && calc.memberSummaries.length > 0 && (
           <div className="rounded-2xl border bg-card">
             <div className="border-b px-4 py-3">
               <p className="font-semibold">Member Dues</p>
