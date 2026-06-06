@@ -41,7 +41,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="hidden md:block">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold">{messContext.messName}</h1>
         <p className="text-muted-foreground">{getMonthName(month)} {year} overview</p>
       </div>
 

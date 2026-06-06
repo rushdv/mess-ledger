@@ -77,7 +77,12 @@ export function Sidebar() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
           <UtensilsCrossed className="h-4 w-4 text-primary-foreground" />
         </div>
-        <span className="text-lg font-bold">MessLedger</span>
+        <div className="min-w-0 flex-1">
+          <span className="text-lg font-bold">MessLedger</span>
+          {messContext && (
+            <p className="truncate text-xs text-muted-foreground">{messContext.messName}</p>
+          )}
+        </div>
       </div>
 
       {/* Nav */}

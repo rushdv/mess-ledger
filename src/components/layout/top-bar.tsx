@@ -2,10 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
+import { useMessContext } from "@/hooks/use-mess-context";
 import { UtensilsCrossed } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
   "/meals": "Meal Count",
   "/bazar": "Bazar Cost",
   "/utility": "Utility",
@@ -21,7 +21,14 @@ export function TopBar() {
   const pathname = usePathname();
   const { data } = useSession();
   const user = data?.user;
-  const title = pageTitles[pathname] ?? "MessLedger";
+  const { messContext, loading } = useMessContext();
+
+  let title: string;
+  if (pathname === "/dashboard") {
+    title = loading ? "Loading..." : messContext?.messName ?? "Dashboard";
+  } else {
+    title = pageTitles[pathname] ?? "MessLedger";
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden">
