@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, getSession } from "@/lib/auth-client";
+import { signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -33,14 +33,8 @@ export default function LoginClient() {
     if (signInError) {
       setError("Invalid email or password");
     } else {
-      // Get the current session to check user role
-      const session = await getSession();
-      
-      if (session?.user?.role === "SUPER_ADMIN") {
-        router.push("/super-admin");
-      } else {
-        router.push("/dashboard");
-      }
+      // Redirect to dashboard - role-based redirect will happen server-side
+      router.push("/dashboard");
       router.refresh();
     }
   }
