@@ -6,6 +6,30 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding database...");
 
+  // Create super admin user
+  const superAdminPassword = await bcrypt.hash("superadmin123", 12);
+  const superAdmin = await prisma.user.upsert({
+    where: { email: "superadmin@messledger.com" },
+    update: { role: "SUPER_ADMIN" },
+    create: {
+      email: "superadmin@messledger.com",
+      name: "Super Admin",
+      role: "SUPER_ADMIN",
+    },
+  });
+
+  // Create Account record for super admin with password
+  await prisma.account.upsert({
+    where: { providerId_accountId: { providerId: "credential", accountId: superAdmin.id } },
+    update: { password: superAdminPassword },
+    create: {
+      userId: superAdmin.id,
+      providerId: "credential",
+      accountId: superAdmin.id,
+      password: superAdminPassword,
+    },
+  });
+
   // Create admin user
   const adminPassword = await bcrypt.hash("admin123", 12);
   const admin = await prisma.user.upsert({
@@ -14,8 +38,19 @@ async function main() {
     create: {
       email: "admin@messledger.com",
       name: "Mess Admin",
-      password: adminPassword,
       role: "ADMIN",
+    },
+  });
+
+  // Create Account record for admin with password
+  await prisma.account.upsert({
+    where: { providerId_accountId: { providerId: "credential", accountId: admin.id } },
+    update: { password: adminPassword },
+    create: {
+      userId: admin.id,
+      providerId: "credential",
+      accountId: admin.id,
+      password: adminPassword,
     },
   });
 
@@ -35,10 +70,22 @@ async function main() {
       create: {
         email: m.email,
         name: m.name,
-        password: memberPassword,
         role: "MEMBER",
       },
     });
+
+    // Create Account record for member with password
+    await prisma.account.upsert({
+      where: { providerId_accountId: { providerId: "credential", accountId: user.id } },
+      update: { password: memberPassword },
+      create: {
+        userId: user.id,
+        providerId: "credential",
+        accountId: user.id,
+        password: memberPassword,
+      },
+    });
+
     members.push({ user, phone: m.phone });
   }
 
@@ -108,6 +155,7 @@ async function main() {
   }
 
   console.log("✅ Seed complete!");
+  console.log("   Super Admin: superadmin@messledger.com / superadmin123");
   console.log("   Admin: admin@messledger.com / admin123");
   console.log("   Members: rahim/karim/jamal@messledger.com / member123");
   console.log(`   Mess Code: DEMO2024`);

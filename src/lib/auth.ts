@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -11,6 +12,10 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
+    password: {
+      hash: async (password) => await bcrypt.hash(password, 12),
+      verify: async ({ hash, password }) => await bcrypt.compare(password, hash),
+    },
   },
 
   // ── Google OAuth ──────────────────────────────────────────────────────────
