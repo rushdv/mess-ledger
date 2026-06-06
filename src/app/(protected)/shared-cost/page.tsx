@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, formatDate } from "@/lib/utils";
 import { Plus, Trash2, Share2, Users } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -96,14 +97,24 @@ export default function SharedCostPage() {
       });
       setOpen(false);
       fetchData();
+      toast.success("Shared cost added");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to add shared cost" }));
+      toast.error(err.error);
     }
     setLoading(false);
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this entry?")) return;
-    await fetch(`/api/shared-cost?id=${id}`, { method: "DELETE" });
-    fetchData();
+    const res = await fetch(`/api/shared-cost?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      fetchData();
+      toast.success("Shared cost deleted");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to delete" }));
+      toast.error(err.error);
+    }
   }
 
   const AddDialog = (
