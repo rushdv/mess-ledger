@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, formatDate } from "@/lib/utils";
 import { Plus, Trash2, CreditCard } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -64,6 +65,10 @@ export default function PaymentsPage() {
       setForm({ memberId: "", amount: "", note: "", date: new Date().toISOString().split('T')[0] }); 
       setOpen(false); 
       fetchData(); 
+      toast.success("Payment recorded");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to record payment" }));
+      toast.error(err.error);
     }
     setLoading(false);
   }
@@ -105,16 +110,24 @@ export default function PaymentsPage() {
       setForm((p) => ({ ...p, date: new Date().toISOString().split('T')[0] }));
       setOpen(false);
       fetchData();
+      toast.success("All payments recorded");
     } else {
-      const err = await res.json();
-      alert(err.error || "Failed to record payments.");
+      const err = await res.json().catch(() => ({ error: "Failed to record payments" }));
+      toast.error(err.error);
     }
     setLoading(false);
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this payment?")) return;
-    await fetch(`/api/payments?id=${id}`, { method: "DELETE" }); fetchData();
+    const res = await fetch(`/api/payments?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      fetchData();
+      toast.success("Payment deleted");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to delete payment" }));
+      toast.error(err.error);
+    }
   }
 
   const AddDialog = (
