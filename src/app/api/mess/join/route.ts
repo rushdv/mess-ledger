@@ -42,9 +42,15 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       } else {
-        await prisma.messMember.update({
-          where: { id: existing.id },
-          data: { isActive: true },
+        await prisma.$transaction(async (tx) => {
+          await tx.messMember.update({
+            where: { id: existing.id },
+            data: { isActive: true },
+          });
+          await tx.member.updateMany({
+            where: { userId: session.user.id, messId: mess.id },
+            data: { isActive: true },
+          });
         });
         return NextResponse.json(mess);
       }
