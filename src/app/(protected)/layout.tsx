@@ -17,6 +17,11 @@ export default async function ProtectedLayout({
     redirect("/login");
   }
 
+  // If user is super admin, redirect to admin dashboard
+  if (session.user?.role === "SUPER_ADMIN") {
+    redirect("/super-admin");
+  }
+
   const messContext = await getMessContext();
   if (!messContext) {
     redirect("/select-mess");
