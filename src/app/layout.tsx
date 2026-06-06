@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 // Root layout wrapper that sets up global HTML structure, fonts, and themes
 import { Providers } from "./providers";
@@ -38,7 +39,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster richColors closeButton />
+        </Providers>
       </body>
     </html>
   );
