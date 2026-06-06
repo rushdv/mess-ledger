@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, cn } from "@/lib/utils";
 import { Save } from "lucide-react";
+import { toast } from "sonner";
 
 interface Member {
   id: string;
@@ -82,22 +83,31 @@ export default function MealsPage() {
   async function handleSaveAll() {
     setSaving(true);
     const dk = `${year}-${String(month).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
-    await Promise.all(
-      Object.entries(entries).map(([memberId, e]) =>
-        fetch("/api/meals", {
+    const results = await Promise.allSettled(
+      Object.entries(entries).map(async ([memberId, e]) => {
+        const res = await fetch("/api/meals", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ memberId, date: dk, ...e }),
-        })
-          .then((r) => r.json())
-          .then((saved: MealEntry) => {
-            setMealMap((prev) => ({
-              ...prev,
-              [memberId]: { ...prev[memberId], [dk]: saved },
-            }));
-          })
-      )
+        });
+        if (res.ok) {
+          const saved: MealEntry = await res.json();
+          setMealMap((prev) => ({
+            ...prev,
+            [memberId]: { ...prev[memberId], [dk]: saved },
+          }));
+        } else {
+          const err = await res.json().catch(() => ({ error: "Failed to save meal entry" }));
+          throw new Error(err.error);
+        }
+      })
     );
+    const failed = results.filter((r) => r.status === "rejected");
+    if (failed.length === 0) {
+      toast.success("All meals saved");
+    } else {
+      toast.error(`${failed.length} entry(s) failed to save`);
+    }
     setSaving(false);
     setMessage("Saved!");
     setTimeout(() => setMessage(""), 2000);
