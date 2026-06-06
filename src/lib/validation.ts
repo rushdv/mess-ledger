@@ -5,7 +5,7 @@ const positiveAmount = z.number().positive("Amount must be greater than 0");
 const nonNegativeAmount = z.number().nonnegative("Amount cannot be negative");
 const monthInt = z.number().int().min(1).max(12);
 const yearInt = z.number().int().min(2000).max(2100);
-const dateString = z.string().min(1, "Date is required");
+const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format");
 const memberIdString = z.string().min(1, "memberId is required");
 
 // ── Meals ───────────────────────────────────────────────────────
