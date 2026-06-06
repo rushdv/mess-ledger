@@ -44,8 +44,8 @@ export async function GET(req: Request) {
         currentUserCount = totalUsers;
         currentMessCount = totalMesses;
       } else {
-        currentUserCount += userInc;
-        currentMessCount += messInc;
+        currentUserCount -= userInc;
+        currentMessCount -= messInc;
       }
 
       growthData.push({
