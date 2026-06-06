@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, formatDate } from "@/lib/utils";
 import { Plus, Trash2, Zap, Droplets, Flame, Wifi, MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -86,14 +87,24 @@ export default function UtilityPage() {
       }); 
       setOpen(false); 
       fetchEntries(); 
+      toast.success("Utility entry added");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to add utility entry" }));
+      toast.error(err.error);
     }
     setLoading(false);
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this entry?")) return;
-    await fetch(`/api/utility?id=${id}`, { method: "DELETE" });
-    fetchEntries();
+    const res = await fetch(`/api/utility?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      fetchEntries();
+      toast.success("Utility entry deleted");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to delete entry" }));
+      toast.error(err.error);
+    }
   }
 
   const AddDialog = (
