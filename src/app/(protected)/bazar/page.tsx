@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, formatDate } from "@/lib/utils";
 import { Plus, Trash2, ShoppingBasket, User } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -80,14 +81,24 @@ export default function BazarPage() {
       setForm({ amount: "", description: "", date: new Date().toISOString().split("T")[0], memberId: "" });
       setOpen(false);
       fetchEntries();
+      toast.success("Bazar entry added");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to add bazar entry" }));
+      toast.error(err.error);
     }
     setLoading(false);
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this entry?")) return;
-    await fetch(`/api/bazar?id=${id}`, { method: "DELETE" });
-    fetchEntries();
+    const res = await fetch(`/api/bazar?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      fetchEntries();
+      toast.success("Bazar entry deleted");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to delete entry" }));
+      toast.error(err.error);
+    }
   }
 
   const AddDialog = (
