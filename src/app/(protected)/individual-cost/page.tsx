@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { MonthPicker } from "@/components/layout/month-picker";
 import { getCurrentMonthYear, formatCurrency, formatDate } from "@/lib/utils";
 import { Plus, Trash2, Receipt, User } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -94,6 +95,10 @@ export default function IndividualCostPage() {
       });
       setOpen(false);
       fetchData();
+      toast.success("Cost added");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to add cost" }));
+      toast.error(err.error);
     }
     setLoading(false);
   }
@@ -135,17 +140,24 @@ export default function IndividualCostPage() {
       setForm((p) => ({ ...p, date: new Date().toISOString().split('T')[0] }));
       setOpen(false);
       fetchData();
+      toast.success("All costs added");
     } else {
-      const err = await res.json();
-      alert(err.error || "Failed to add entries.");
+      const err = await res.json().catch(() => ({ error: "Failed to add entries" }));
+      toast.error(err.error);
     }
     setLoading(false);
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this entry?")) return;
-    await fetch(`/api/individual-cost?id=${id}`, { method: "DELETE" });
-    fetchData();
+    const res = await fetch(`/api/individual-cost?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      fetchData();
+      toast.success("Cost deleted");
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to delete cost" }));
+      toast.error(err.error);
+    }
   }
 
   const AddDialog = (
